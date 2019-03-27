@@ -16,4 +16,10 @@ public interface SuperAdminServcie {
      * @return
      */
     JsonEntity<SuperAdmin> login(SuperAdminLogin superAdminLogin);
+
+    /**
+     * 创建房间
+     * @return
+     */
+    JsonEntity<String> createRoom();
 }

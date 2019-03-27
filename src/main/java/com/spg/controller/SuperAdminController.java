@@ -42,10 +42,8 @@ public class SuperAdminController {
 
     @ApiOperation(value = "超级管理员创建房间")
     @RequestMapping(value = "/admin/create/room", method = {RequestMethod.POST}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public JsonEntity<String> login(){
-//        String opendi = CookieUtils.getOpenid(request);
-//        WebSessionUser webSessionUser = userService.getWebSessionUserByOpneid(opendi);
-//        return cardTransService.createCardPackage(cardNum , webSessionUser);
+    public JsonEntity<String> createRoom(){
+
         return null;
     }
 

@@ -5,6 +5,7 @@ import com.spg.commom.MessageCodeEnum;
 import com.spg.commom.ResponseHelper;
 import com.spg.commom.SuperAdminLogin;
 import com.spg.dao.SuperAdminDao;
+import com.spg.domin.Room;
 import com.spg.domin.SuperAdmin;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,12 @@ public class SuperAdminServiceImpl implements SuperAdminServcie{
 
     @Resource
     private SuperAdminDao superAdminDao;
+
+    @Resource
+    private RoomService roomService;
+
+    @Resource
+    private ConfigService configService;
 
     @Override
     public JsonEntity<SuperAdmin> login(SuperAdminLogin superAdminLogin) {
@@ -40,5 +47,13 @@ public class SuperAdminServiceImpl implements SuperAdminServcie{
                 }
             }
         }
+    }
+
+    @Override
+    public JsonEntity<String> createRoom(){
+        Room room = new Room();
+        room.setRoomName("小私群");
+        roomService.insertOne(room);
+        Config config = configService.findOneCanUse();
     }
 }
