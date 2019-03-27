@@ -1,0 +1,25 @@
+package com.spg.util;
+
+import com.trevor.bo.WebKeys;
+import com.trevor.bo.WebSessionUser;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpSession;
+
+public class SessionUtil {
+
+    /**
+     * 获取session
+     */
+    public static HttpSession getSession() {
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        return requestAttributes.getRequest().getSession();
+    }
+
+    public static WebSessionUser getSessionUser() {
+        WebSessionUser userInSession = (WebSessionUser) getSession().getAttribute(WebKeys.SESSION_USER_KEY);
+        return userInSession;
+    }
+
+}
