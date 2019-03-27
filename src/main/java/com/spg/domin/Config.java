@@ -3,9 +3,9 @@ package com.spg.domin;
 import lombok.Data;
 
 @Data
-public class config {
+public class Config {
 
     private Long id;
 
-    private String 
+    private String domainName;
 }

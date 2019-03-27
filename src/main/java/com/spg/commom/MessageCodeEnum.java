@@ -22,9 +22,19 @@ public enum MessageCodeEnum {
     ERROR_NUM_MAX(-2 ,"操你妈，想黑爸爸呢"),
 
     /**
+     * 无可用域名了
+     */
+    NO_DOMAIN_NAMES(-3 ,"无可用域名了"),
+
+    /**
      * 草，报异常了
      */
     SYSTEM_ERROR(-6 ,"鸡巴，报错了"),
+
+    /**
+     * 授权失败
+     */
+    AUTH_FAILED(-4 ,"授权失败"),
 
     /**
      * 草，参数错误
@@ -34,7 +44,12 @@ public enum MessageCodeEnum {
     /**
      * 登陆成功
      */
-    LOGIN_SUCCESS(1 ,"登陆成功");
+    LOGIN_SUCCESS(1 ,"登陆成功"),
+
+    /**
+     * 创建成功
+     */
+    CREATE_SUCCESS(2 ,"创建成功");
 
 
 

@@ -1,4 +1,4 @@
-package com.spg.controller;
+package com.spg.web.controller;
 
 import com.spg.commom.*;
 import com.spg.domin.SuperAdmin;
@@ -32,7 +32,6 @@ public class SuperAdminController {
     public JsonEntity<String> login(@RequestBody @Validated SuperAdminLogin superAdminLogin){
         JsonEntity<SuperAdmin> login = superAdminServcie.login(superAdminLogin);
         if (login.getCode() > 0) {
-            SessionUtil.getSession().setAttribute(WebKeys.SESSION_USER ,login.getData());
             return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.LOGIN_SUCCESS);
         }else {
             return new JsonEntity<>(login.getCode() ,login.getMessage());
@@ -43,8 +42,7 @@ public class SuperAdminController {
     @ApiOperation(value = "超级管理员创建房间")
     @RequestMapping(value = "/admin/create/room", method = {RequestMethod.POST}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<String> createRoom(){
-
-        return null;
+        return superAdminServcie.createRoom();
     }
 
 }

@@ -1,10 +1,12 @@
 package com.spg.service.impl;
 
 import com.spg.dao.ConfigDao;
+import com.spg.domin.Config;
 import com.spg.service.ConfigService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @Service
 public class ConfigServiceImpl implements ConfigService {
@@ -13,7 +15,7 @@ public class ConfigServiceImpl implements ConfigService {
     private ConfigDao configDao;
 
     @Override
-    public ConfigDao findOneCanUse() {
-        return configDao.findOneCanUse();
+    public List<Config> findDomainNamesCanUse() {
+        return configDao.findDomainNamesCanUse();
     }
 }
