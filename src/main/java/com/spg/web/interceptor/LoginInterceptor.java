@@ -20,6 +20,11 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // 取得客户端浏览器的类型
+        String browserType = request.getHeader("user-agent").toLowerCase();
+        if (browserType.indexOf(WebKeys.WEIXIN_BROWSER) < 0) {
+            response.sendRedirect("/error.html");
+        }
         //从什么页面进来
         String reUrl = request.getRequestURI();
         //获取token
