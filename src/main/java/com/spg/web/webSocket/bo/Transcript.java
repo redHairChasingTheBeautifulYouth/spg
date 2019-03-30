@@ -16,8 +16,8 @@ public class Transcript {
 
     private int maxLines;
 
-    public Transcript() {
-        this.maxLines = 20;
+    public Transcript(int maxLines) {
+        this.maxLines = maxLines;
     }
 
     public String getLastUserName(){
