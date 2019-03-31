@@ -1,16 +1,14 @@
 package com.spg.web.webSocket.config;
 
-import com.spg.commom.WebKeys;
 import com.spg.web.webSocket.bo.Transcript;
 import lombok.Data;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpSession;
 import javax.websocket.HandshakeResponse;
+import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerEndpointConfig;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @Auther: trevor
@@ -20,7 +18,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 public class ChatServerConfigurator extends ServerEndpointConfig.Configurator {
 
-    private ConcurrentHashMap<String , Set<Transcript>> userMap = new ConcurrentHashMap<>(2<<6);
+    private ConcurrentHashMap<String , Transcript> userMap = new ConcurrentHashMap<>(2<<6);
+
+    private ConcurrentHashMap<String , CopyOnWriteArrayList<Session>> sessions = new ConcurrentHashMap<>(2<<9);
 
 
     /**

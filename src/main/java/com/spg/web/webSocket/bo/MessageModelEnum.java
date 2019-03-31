@@ -10,23 +10,23 @@ public enum  MessageModelEnum {
     /**
      * token 过期
      */
-    TOKEN_TIME_ERROR(-1 ,"token 过期"),
+    TOKEN_TIME_ERROR("-1" ,"token 过期"),
 
     /**
      * token 错误
      */
-    TOKEN_ERROR(-1 ,"token 错误");
+    TOKEN_ERROR("-2" ,"token 错误");
 
-    private Integer code;
+    private String code;
 
     private String desc;
 
-    MessageModelEnum(Integer code , String message){
+    MessageModelEnum(String code , String message){
         this.code = code;
         this.desc = message;
     }
 
-    public Integer getCode() {
+    public String getCode() {
         return code;
     }
 

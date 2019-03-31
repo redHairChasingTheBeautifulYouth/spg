@@ -14,8 +14,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Data
 public class Transcript {
 
-    private CopyOnWriteArrayList<ChatUser> messages = new CopyOnWriteArrayList<>();
+    private CopyOnWriteArrayList<ChatUser> users = new CopyOnWriteArrayList<>();
 
-    private CopyOnWriteArrayList<ChatMessage> userNames = new CopyOnWriteArrayList<>();
+    private CopyOnWriteArrayList<ChatMessage> messages = new CopyOnWriteArrayList<>();
 
 }
