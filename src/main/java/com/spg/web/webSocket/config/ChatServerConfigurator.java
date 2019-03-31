@@ -1,10 +1,15 @@
-package com.spg.web.webSocket.bo;
+package com.spg.web.webSocket.config;
 
+import com.spg.commom.WebKeys;
+import com.spg.web.webSocket.bo.Transcript;
 import lombok.Data;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpSession;
 import javax.websocket.HandshakeResponse;
 import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerEndpointConfig;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -14,11 +19,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Data
 public class ChatServerConfigurator extends ServerEndpointConfig.Configurator {
-    private Transcript transcript;
 
-    public ChatServerConfigurator(){
-        this.transcript = new Transcript(20);
-    }
+    private ConcurrentHashMap<String , Set<Transcript>> userMap = new ConcurrentHashMap<>(2<<6);
+
 
     /**
      * 拦截打开握手阶段的HTTP请求和响应

@@ -32,6 +32,11 @@ public enum MessageCodeEnum {
     SYSTEM_ERROR(-6 ,"鸡巴，报错了"),
 
     /**
+     * 房间不存在
+     */
+    ROOM_NOT_EXIST(-5 ,"房间不存在"),
+
+    /**
      * 授权失败
      */
     AUTH_FAILED(-4 ,"授权失败"),
@@ -49,7 +54,9 @@ public enum MessageCodeEnum {
     /**
      * 创建成功
      */
-    CREATE_SUCCESS(2 ,"创建成功");
+    CREATE_SUCCESS(2 ,"创建成功"),
+
+    AUTH_SUCCESS(3 ,"授权成功");
 
 
 

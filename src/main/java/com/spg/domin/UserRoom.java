@@ -11,4 +11,6 @@ public class UserRoom {
 
     private Long roomId;
 
+    private Integer roleType;
+
 }

@@ -9,5 +9,20 @@ import lombok.Data;
 @Data
 public class MessageModel {
 
-    private String messgeType;
+    private Integer code;
+
+    private String desc;
+
+    private String data;
+
+    public MessageModel(MessageModelEnum messageModelEnum){
+        this.code = messageModelEnum.getCode();
+        this.desc = messageModelEnum.getDesc();
+    }
+
+    public MessageModel(MessageModelEnum messageModelEnum ,String data){
+        this.code = messageModelEnum.getCode();
+        this.desc = messageModelEnum.getDesc();
+        this.data = data;
+    }
 }

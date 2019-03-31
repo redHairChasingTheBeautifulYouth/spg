@@ -22,7 +22,7 @@ public class SuperAdmin {
     private String password;
 
     /**
-     * 错误次数，
+     * 错误次数
      */
     private Integer errorNum;
 

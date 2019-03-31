@@ -9,4 +9,11 @@ public interface RoomService {
      * @param room
      */
     void insertOne(Room room);
+
+    /**
+     * 检查房间是否存在
+     * @param roomId
+     * @return
+     */
+    Long isExist(Long roomId);
 }

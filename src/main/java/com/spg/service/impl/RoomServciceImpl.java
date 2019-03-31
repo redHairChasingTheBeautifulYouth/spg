@@ -17,4 +17,9 @@ public class RoomServciceImpl implements RoomService {
     public void insertOne(Room room) {
         roomDao.insertOne(room);
     }
+
+    @Override
+    public Long isExist(Long roomId){
+        return roomDao.isExist(roomId);
+    }
 }

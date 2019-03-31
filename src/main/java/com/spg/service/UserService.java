@@ -1,4 +1,8 @@
 package com.spg.service;
 
-public class UserService {
+import com.spg.domin.User;
+
+public interface UserService {
+
+    User findUserByOpenidContainOpenidAndHash(String openid);
 }
