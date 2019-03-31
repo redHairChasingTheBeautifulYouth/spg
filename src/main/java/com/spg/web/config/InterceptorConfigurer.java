@@ -27,6 +27,7 @@ public class InterceptorConfigurer implements WebMvcConfigurer{
                 //排除不需要验证登录用户操作权限的请求
                 .excludePathPatterns("/weixinLogin.html")
                 .excludePathPatterns("/superAdminLogin.html")
+                .excludePathPatterns("/get/token")
                 .excludePathPatterns("/images/**");
     }
 

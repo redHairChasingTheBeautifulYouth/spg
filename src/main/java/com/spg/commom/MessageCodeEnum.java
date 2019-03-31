@@ -41,6 +41,8 @@ public enum MessageCodeEnum {
      */
     AUTH_FAILED(-4 ,"授权失败"),
 
+    NOT_FRIENDS(-7 ,"还不是房主的好友"),
+
     /**
      * 草，参数错误
      */
@@ -56,9 +58,11 @@ public enum MessageCodeEnum {
      */
     CREATE_SUCCESS(2 ,"创建成功"),
 
-    AUTH_SUCCESS(3 ,"授权成功");
+    AUTH_SUCCESS(3 ,"授权成功"),
 
+    RNTER_ROOM_SUCCESS(4 ,"进入房间成功"),
 
+    APPLY_SUCCESS(5 ,"申请成功");
 
     /*****************************************               websocket返回消息                    *********************/
 

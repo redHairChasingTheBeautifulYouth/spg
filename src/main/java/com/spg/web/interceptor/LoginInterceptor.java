@@ -3,7 +3,6 @@ package com.spg.web.interceptor;
 import com.spg.commom.WebKeys;
 import com.spg.domin.User;
 import com.spg.service.UserService;
-import com.spg.util.SessionUtil;
 import com.spg.util.TokenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
@@ -13,7 +12,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @Auther: trevor
@@ -58,6 +56,11 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
             if(!(checkOpenidAndHash(openid,hash) && checkTimeStamp(timestamp))){
                 response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
             }
+            /*if (checkTimeStamp(timestamp)) {
+                return Boolean.TRUE;
+            }else {
+                request.getRequestDispatcher("/get/token?token="+token).forward(request, response);
+            }*/
             return Boolean.TRUE;
         } catch (Exception e) {
             //token非法
@@ -76,7 +79,7 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
      */
     private boolean checkTimeStamp(String timestamp) {
         // 有效期: 30分钟,单位: ms
-        long expires_in = 30 * 1000 * 20;
+        long expires_in = 60 * 1000 * 60 * 24;
         long timestamp_long = Long.parseLong(timestamp);
         //两者相差的时间,单位(ms)
         long time = System.currentTimeMillis() - timestamp_long;
@@ -96,7 +99,7 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
      * @return
      */
     private Boolean checkOpenidAndHash(String openid,String hash){
-        User user = userService.findUserByOpenidContainOpenidAndHash(openid);
+        User user = userService.findByOpenid(openid);
         if(user.getOpenid() != null){
             //对比
             if(openid.equals(user.getOpenid()) && hash.equals(user.getHash())){

@@ -8,5 +8,8 @@ import com.spg.commom.JsonEntity;
  * @Description:
  */
 public interface BizService {
-    JsonEntity<String> checkUserRoom(Long roomId ,String token);
+
+    JsonEntity<String> enterRoom(Long roomId ,String openid);
+
+    JsonEntity<String> applyRnterRoom(Long roomId ,String openid);
 }

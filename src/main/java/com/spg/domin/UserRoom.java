@@ -11,6 +11,9 @@ public class UserRoom {
 
     private Long roomId;
 
+    /**
+     * 1为房主，2为管理员，3为普通成员，4为申请未通过的
+     */
     private Integer roleType;
 
 }

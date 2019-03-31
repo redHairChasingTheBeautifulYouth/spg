@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface RoomDao {
+public interface RoomMapper {
 
     void insertOne(@Param("room") Room room);
 

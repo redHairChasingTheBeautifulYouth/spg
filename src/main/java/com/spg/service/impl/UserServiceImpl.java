@@ -1,6 +1,6 @@
 package com.spg.service.impl;
 
-import com.spg.dao.UserDao;
+import com.spg.dao.UserMapper;
 import com.spg.domin.User;
 import com.spg.service.UserService;
 import org.springframework.stereotype.Service;
@@ -11,11 +11,11 @@ import javax.annotation.Resource;
 public class UserServiceImpl implements UserService {
 
     @Resource
-    private UserDao userDao;
+    private UserMapper userMapper;
 
     @Override
-    public User  findUserByOpenidContainOpenidAndHash(String openid) {
-        return userDao.findUserByOpenidContainOpenidAndHash(openid);
+    public User  findByOpenid(String openid) {
+        return userMapper.findByOpenid(openid);
     }
 
 }

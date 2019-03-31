@@ -4,7 +4,7 @@ import com.spg.domin.User;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserDao {
+public interface UserMapper {
 
-    User findUserByOpenidContainOpenidAndHash(String openid);
+    User findByOpenid(String openid);
 }

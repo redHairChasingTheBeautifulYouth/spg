@@ -170,7 +170,7 @@ public class ChatServer {
         return false;
     }
 
-    void processNewUser(ChatUser chatUser){
+    void processNewUser(String openid){
 
 
     }

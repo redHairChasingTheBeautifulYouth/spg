@@ -1,5 +1,6 @@
 package com.spg.dao;
 
+import com.spg.domin.UserRoom;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,8 @@ import org.springframework.stereotype.Repository;
 public interface UserRoomDao {
 
     Long isExist(@Param("roomId") Long roomId);
+
+    void insertOne(@Param("userRoom")UserRoom userRoom);
+
+    UserRoom findByRoomIdAndUserId(Long roomId ,Long userId);
 }

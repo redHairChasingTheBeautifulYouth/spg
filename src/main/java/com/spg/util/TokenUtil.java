@@ -41,5 +41,9 @@ public class TokenUtil {
         return claims;
     }
 
-
+    /*public static String getTokenValue (String type ,String token) {
+        Map<String,Object> map = getClaimsFromToken(token);
+        return (String)map.get(type);
+    }
+*/
 }
