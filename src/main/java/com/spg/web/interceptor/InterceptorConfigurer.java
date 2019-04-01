@@ -5,6 +5,8 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import javax.annotation.Resource;
+
 /**
  * @Auther: trevor
  * @Date: 2019\3\28 0028 01:03
@@ -13,15 +15,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Component
 public class InterceptorConfigurer implements WebMvcConfigurer{
 
-    @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
+    @Resource
+    private CORSInterceptor corsInterceptor;
 
-    }
+    @Resource
+    private LoginInterceptor loginInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new CORSInterceptor()).addPathPatterns("/**");
-        registry.addInterceptor(new LoginInterceptor())
+        registry.addInterceptor(corsInterceptor).addPathPatterns("/**");
+        registry.addInterceptor(loginInterceptor)
                 //添加需要验证登录用户操作权限的请求
                 .addPathPatterns("/**")
                 //排除swagger
