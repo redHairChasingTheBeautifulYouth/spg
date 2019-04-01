@@ -1,5 +1,6 @@
 package com.spg.domin;
 
+import com.spg.commom.ChatMessage;
 import lombok.Data;
 
 @Data
@@ -12,6 +13,8 @@ public class Message {
      */
     private Long userId;
 
+    private String appName;
+
     /**
      * 房间id
      */
@@ -23,7 +26,7 @@ public class Message {
     private Long time;
 
     /**
-     * 1为文字消息，2为图片，3为表情
+     * 1为加入新的聊天用户，2为聊天内容，3为图片
      */
     private Integer messageType;
 
@@ -31,4 +34,13 @@ public class Message {
      * 消息
      */
     private String message;
+
+    public Message (ChatMessage chatMessage ,String roomId){
+        this.userId = chatMessage.getUserId();
+        this.roomId = Long.valueOf(roomId);
+        this.time = chatMessage.getTime();
+        this.messageType = chatMessage.getMessageType();
+        this.message = chatMessage.getMessage();
+        this.appName = chatMessage.getAppName();
+    }
 }

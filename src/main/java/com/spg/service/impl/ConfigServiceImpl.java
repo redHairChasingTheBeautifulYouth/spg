@@ -1,6 +1,6 @@
 package com.spg.service.impl;
 
-import com.spg.dao.ConfigDao;
+import com.spg.dao.ConfigMapper;
 import com.spg.domin.Config;
 import com.spg.service.ConfigService;
 import org.springframework.stereotype.Service;
@@ -12,10 +12,10 @@ import java.util.List;
 public class ConfigServiceImpl implements ConfigService {
 
     @Resource
-    private ConfigDao configDao;
+    private ConfigMapper configMapper;
 
     @Override
     public List<Config> findDomainNamesCanUse() {
-        return configDao.findDomainNamesCanUse();
+        return configMapper.findDomainNamesCanUse();
     }
 }

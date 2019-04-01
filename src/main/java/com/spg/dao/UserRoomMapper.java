@@ -10,11 +10,11 @@ import org.springframework.stereotype.Repository;
  * @Description:
  */
 @Repository
-public interface UserRoomDao {
+public interface UserRoomMapper {
 
     Long isExist(@Param("roomId") Long roomId);
 
     void insertOne(@Param("userRoom")UserRoom userRoom);
 
-    UserRoom findByRoomIdAndUserId(Long roomId ,Long userId);
+    UserRoom findByRoomIdAndUserId(@Param("roomId") Long roomId ,@Param("userId") Long userId);
 }

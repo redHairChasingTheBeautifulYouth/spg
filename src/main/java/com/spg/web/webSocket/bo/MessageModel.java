@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 public class MessageModel {
 
-    private Integer code;
+    private String code;
 
     private String desc;
 

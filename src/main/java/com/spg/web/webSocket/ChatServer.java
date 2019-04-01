@@ -1,13 +1,12 @@
 package com.spg.web.webSocket;
 
-import com.spg.commom.ChatUser;
-import com.spg.commom.WebKeys;
+import com.spg.commom.*;
+import com.spg.domin.Message;
 import com.spg.domin.User;
+import com.spg.service.MessageService;
 import com.spg.service.UserService;
 import com.spg.util.TokenUtil;
-import com.spg.web.webSocket.bo.MessageModel;
 import com.spg.web.webSocket.bo.MessageModelEnum;
-import com.spg.web.webSocket.bo.Transcript;
 import com.spg.web.webSocket.config.ChatServerConfigurator;
 import com.spg.web.webSocket.decoder.ChatDecoder;
 import com.spg.web.webSocket.encoder.ChatEncoder;
@@ -16,11 +15,12 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.websocket.*;
+import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import javax.websocket.server.ServerEndpointConfig;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -34,7 +34,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
         configurator = ChatServerConfigurator.class,
         encoders = {ChatEncoder.class},
         decoders = {ChatDecoder.class}
-
 )
 @Component
 @Slf4j
@@ -43,18 +42,23 @@ public class ChatServer {
     @Resource
     private UserService userService;
 
-    private Session session;
+    @Resource
+    private MessageService messageService;
+
+    private Session mySession;
 
     private ServerEndpointConfig endpointConfig;
 
-    private ConcurrentHashMap<String , Transcript> userMap;
+    private ConcurrentHashMap<String , CopyOnWriteArrayList<ChatMessage>> chatMessageMap;
+
+    private ConcurrentHashMap<String ,CopyOnWriteArrayList<Session>> sessionUsers;
 
     @OnOpen
-    public void startChatChannel(EndpointConfig config ,Session session) throws IOException, EncodeException {
-        this.session = session;
+    public void startChatChannel(@PathParam("chatRoomId") String roomId  ,EndpointConfig config ,Session session) throws IOException, EncodeException {
+        this.mySession = session;
         String token = session.getRequestParameterMap().get(WebKeys.TOKEN).get(0);
         if (token == null) {
-            this.session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
+            this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
             return;
         }
         //解析token
@@ -64,31 +68,39 @@ public class ChatServer {
         String timestamp = String.valueOf(claims.get("timestamp"));
         //三者必须存在,少一样说明token被篡改
         if (openid == null || hash == null || timestamp == null) {
-            this.session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
+            this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
             return;
         }
         //token是否合法
         if(!(checkOpenidAndHash(openid,hash))){
-            this.session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
+            this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
             return;
         }
         //token过期
         if(checkTimeStamp(timestamp)){
-            this.session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_TIME_ERROR.getCode()));
+            this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_TIME_ERROR.getCode()));
             return;
         }
+        User user = userService.findByOpenid(openid);
+        this.mySession.getUserProperties().put("user" ,user);
         this.endpointConfig = (ServerEndpointConfig) config;
         ChatServerConfigurator csc = (ChatServerConfigurator) endpointConfig.getConfigurator();
-        this.userMap = csc.getUserMap();
-
+        this.chatMessageMap = csc.getMessages();
+        this.sessionUsers = csc.getSessions();
 
     }
 
     @OnMessage
-    public void handleChatMessage(MessageModel messageModel) {
-        switch (messageModel.getCode()) {
-            case "CHAT_DATE_MESSAGE"
+    public void handleChatMessage(@PathParam("chatRoomId") String roomId, ReceiveChatMessage receiveChatMessage) throws IOException, EncodeException {
+        User user = (User) this.mySession.getUserProperties().get("user");
+        ChatMessage chatMessage = new ChatMessage(user ,receiveChatMessage);
+        if (Objects.equals(receiveChatMessage.getMessageType() ,1)) {
+            this.addNewUser(roomId);
         }
+        this.addMessage(roomId ,chatMessage);
+        this.broadcastMessage(roomId ,new ReturnChatMessage(0 ,chatMessage));
+        this.sendMessageToMyself(new ReturnChatMessage(1 ,chatMessage));
+        this.saveChatMessage(chatMessage ,roomId);
     }
 
     @OnError
@@ -104,36 +116,53 @@ public class ChatServer {
 
     /**
      * 聊天加入新的用户
-     * @param openid
      */
-    private void addNewUser(String roomId ,String openid){
-        User user = userService.findByOpenid(openid);
-        Transcript  transcript = userMap.get(roomId);
-        CopyOnWriteArrayList<ChatUser> chatUsers = transcript.getUsers();
-        ChatUser chatUser = new ChatUser();
-        chatUser.setId(user.getId());
-        chatUser.setAppName(user.getAppName());
-        chatUser.setPictureUrl(user.getAppPictureUrl());
-        chatUsers.add(chatUser);
-
+    private void addNewUser(String roomId){
+        CopyOnWriteArrayList<Session> sessions = this.sessionUsers.get(roomId);
+        sessions.add(mySession);
     }
 
-
-    private String getCurrentUserName(){
-        return (String) session.getUserProperties().get(USERNAME_KEY);
+    /**
+     * 加入聊天信息
+     * @param roomId
+     * @param chatMessage
+     */
+    private void addMessage(String roomId ,ChatMessage chatMessage){
+        CopyOnWriteArrayList<ChatMessage> chatMessages = this.chatMessageMap.get(roomId);
+        chatMessages.add(chatMessage);
     }
 
-    private void broadcastTranscriptUpdate(){
-        for (Session nextSession : session.getOpenSessions()) {
-            ChatUpda
+    /**
+     * 给这个聊天室的人广播消息(除了自己)
+     */
+    private void broadcastMessage(String roomId ,ReturnChatMessage returnmyseChatMessage) throws IOException, EncodeException {
+        CopyOnWriteArrayList<Session> sessions = this.sessionUsers.get(roomId);
+        for (Session session : sessions) {
+            if (session.equals(this.mySession)) {
+                continue;
+            }
+            session.getBasicRemote().sendObject(returnmyseChatMessage);
         }
     }
 
-    private  void addMessage(String message){
-        this.transcript.addEntry(this.getCurrentUserName() ,message);
-        this
+    /**
+     * 给自己发消息
+     * @param returnmyseChatMessage
+     * @throws IOException
+     * @throws EncodeException
+     */
+    private void sendMessageToMyself(ReturnChatMessage returnmyseChatMessage) throws IOException, EncodeException {
+        this.mySession.getBasicRemote().sendObject(returnmyseChatMessage);
     }
 
+    /**
+     * 保存聊天记录
+     * @param chatMessage
+     */
+    private void saveChatMessage(ChatMessage chatMessage ,String roomId){
+        Message message = new Message(chatMessage ,roomId);
+        messageService.generateMessage(message);
+    }
 
     private boolean checkTimeStamp(String timestamp) {
         // 有效期: 30分钟,单位: ms
@@ -159,9 +188,5 @@ public class ChatServer {
         }
         return false;
     }
-
-
-
-
 
 }

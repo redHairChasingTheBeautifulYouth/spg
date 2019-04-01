@@ -3,5 +3,16 @@
 <mapper namespace="com.spg.dao.UserMapper">
 
 
-
+    <select id="findByOpenid" resultType="com.spg.domin.User">
+        select
+        id id,
+        openid openid,
+        hash hash,
+        app_name appName,
+        app_picture_url appPictureUrl
+        from
+        `user`
+        where
+        openid=#{openid}
+    </select>
 </mapper>

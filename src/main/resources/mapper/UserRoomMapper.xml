@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spg.dao.UserRoomMapper">
+    <insert id="insertOne">
+        insert into
+        user_room (user_id ,room_id ,role_type)
+        values (#{userRoom.userId} ,#{userRoom.roomId} ,#{userRoom.roleType})
+    </insert>
+
+    <select id="isExist" resultType="java.lang.Long">
+        select
+        count(id)
+        from
+        user_room
+        where
+        room_id=#{roomId}
+    </select>
+    <select id="findByRoomIdAndUserId" resultType="com.spg.domin.UserRoom">
+        select
+        id id,
+        user_id userId,
+        room_id roomId,
+        role_type roleType
+        from
+        user_room
+        where
+        user_id=#{userId}
+        and
+        room_id=#{roomId}
+    </select>
+</mapper>

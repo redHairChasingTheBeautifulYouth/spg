@@ -1,6 +1,6 @@
 package com.spg.service.impl;
 
-import com.spg.dao.UserRoomDao;
+import com.spg.dao.UserRoomMapper;
 import com.spg.domin.UserRoom;
 import com.spg.service.UserRoomService;
 import org.springframework.stereotype.Service;
@@ -13,11 +13,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserRoomServiceImpl implements UserRoomService {
 
-    private UserRoomDao userRoomDao;
+    private UserRoomMapper userRoomMapper;
 
     @Override
     public Long isExist(Long roomId) {
-        return userRoomDao.isExist(roomId);
+        return userRoomMapper.isExist(roomId);
     }
 
     @Override
@@ -26,12 +26,12 @@ public class UserRoomServiceImpl implements UserRoomService {
         userRoom.setUserId(userId);
         userRoom.setRoomId(roomId);
         userRoom.setRoleType(1);
-        userRoomDao.insertOne(userRoom);
+        userRoomMapper.insertOne(userRoom);
     }
 
     @Override
     public UserRoom findByRoomIdAndUserId(Long roomId ,Long userId) {
-        return userRoomDao.findByRoomIdAndUserId(roomId ,userId);
+        return userRoomMapper.findByRoomIdAndUserId(roomId ,userId);
     }
 
     @Override
@@ -40,7 +40,7 @@ public class UserRoomServiceImpl implements UserRoomService {
         userRoom.setUserId(userId);
         userRoom.setRoomId(roomId);
         userRoom.setRoleType(4);
-        userRoomDao.insertOne(userRoom);
+        userRoomMapper.insertOne(userRoom);
     }
 
 

@@ -4,7 +4,7 @@ import com.spg.commom.JsonEntity;
 import com.spg.commom.MessageCodeEnum;
 import com.spg.commom.ResponseHelper;
 import com.spg.commom.SuperAdminLogin;
-import com.spg.dao.SuperAdminDao;
+import com.spg.dao.SuperAdminMapper;
 import com.spg.domin.Config;
 import com.spg.domin.Room;
 import com.spg.domin.SuperAdmin;
@@ -25,7 +25,7 @@ import java.util.Objects;
 public class SuperAdminServiceImpl implements SuperAdminServcie {
 
     @Resource
-    private SuperAdminDao superAdminDao;
+    private SuperAdminMapper superAdminMapper;
 
     @Resource
     private RoomService roomService;
@@ -35,7 +35,7 @@ public class SuperAdminServiceImpl implements SuperAdminServcie {
 
     @Override
     public JsonEntity<SuperAdmin> login(SuperAdminLogin superAdminLogin) {
-        SuperAdmin admin = superAdminDao.findByAccount(superAdminLogin.getAccount());
+        SuperAdmin admin = superAdminMapper.findByAccount(superAdminLogin.getAccount());
         if (admin == null) {
             return ResponseHelper.withErrorInstance(MessageCodeEnum.SUPER_ADMIN_LOGIN_ERROR);
         }else {
@@ -44,7 +44,7 @@ public class SuperAdminServiceImpl implements SuperAdminServcie {
                     return ResponseHelper.withErrorInstance(MessageCodeEnum.ERROR_NUM_MAX);
                 }
                 if (!Objects.equals(admin.getPassword() ,superAdminLogin.getPassward())) {
-                    superAdminDao.updateLoginErrorTime(admin.getId() ,admin.getErrorNum() + 1L);
+                    superAdminMapper.updateLoginErrorNum(admin.getId() ,admin.getErrorNum() + 1L);
                     return ResponseHelper.withErrorInstance(MessageCodeEnum.SUPER_ADMIN_LOGIN_ERROR);
                 }else {
                     return ResponseHelper.createInstance(admin ,MessageCodeEnum.LOGIN_SUCCESS);
