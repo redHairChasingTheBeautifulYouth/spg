@@ -65,20 +65,14 @@ public class ChatServer {
         Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
         String openid = (String) claims.get(WebKeys.OPEN_ID);
         String hash = (String) claims.get("hash");
-        String timestamp = String.valueOf(claims.get("timestamp"));
         //三者必须存在,少一样说明token被篡改
-        if (openid == null || hash == null || timestamp == null) {
+        if (openid == null || hash == null) {
             this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
             return;
         }
         //token是否合法
-        if(!(checkOpenidAndHash(openid,hash))){
+        if(!(userService.checkOpenidAndHash(openid,hash))){
             this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
-            return;
-        }
-        //token过期
-        if(checkTimeStamp(timestamp)){
-            this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_TIME_ERROR.getCode()));
             return;
         }
         User user = userService.findByOpenid(openid);
@@ -105,7 +99,7 @@ public class ChatServer {
 
     @OnError
     public void myError(Throwable t){
-
+        log.error(t.toString());
     }
 
     @OnClose
@@ -162,31 +156,6 @@ public class ChatServer {
     private void saveChatMessage(ChatMessage chatMessage ,String roomId){
         Message message = new Message(chatMessage ,roomId);
         messageService.generateMessage(message);
-    }
-
-    private boolean checkTimeStamp(String timestamp) {
-        // 有效期: 30分钟,单位: ms
-        long expires_in = 30 * 1000 * 20;
-        long timestamp_long = Long.parseLong(timestamp);
-        //两者相差的时间,单位(ms)
-        long time = System.currentTimeMillis() - timestamp_long;
-        if(time > expires_in){
-            //过期
-            return false;
-        }else {
-            return true;
-        }
-    }
-
-    private Boolean checkOpenidAndHash(String openid,String hash){
-        User user = userService.findByOpenid(openid);
-        if(user.getOpenid() != null){
-            //对比
-            if(openid.equals(user.getOpenid()) && hash.equals(user.getHash())){
-                return true;
-            }
-        }
-        return false;
     }
 
 }

@@ -1,9 +1,12 @@
 package com.spg.service.impl;
 
 import com.spg.dao.UserRoomMapper;
+import com.spg.domin.User;
 import com.spg.domin.UserRoom;
 import com.spg.service.UserRoomService;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * @Auther: trevor
@@ -41,6 +44,12 @@ public class UserRoomServiceImpl implements UserRoomService {
         userRoom.setRoomId(roomId);
         userRoom.setRoleType(4);
         userRoomMapper.insertOne(userRoom);
+    }
+
+    @Override
+    public List<User> queryMember(Long roomId) {
+        List<User> users = userRoomMapper.queryMember(roomId);
+        return users;
     }
 
 

@@ -41,4 +41,6 @@ public class ReturnChatMessage {
         this.messageType = chatMessage.getMessageType();
         this.pictureUrl = chatMessage.getPictureUrl();
     }
+
+    public ReturnChatMessage(){}
 }

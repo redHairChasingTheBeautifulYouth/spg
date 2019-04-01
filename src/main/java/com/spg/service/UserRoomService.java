@@ -1,6 +1,9 @@
 package com.spg.service;
 
+import com.spg.domin.User;
 import com.spg.domin.UserRoom;
+
+import java.util.List;
 
 /**
  * @Auther: trevor
@@ -16,4 +19,6 @@ public interface UserRoomService {
     UserRoom findByRoomIdAndUserId(Long roomId ,Long userId);
 
     void applyEnterRoom(Long roomId ,Long userId);
+
+    List<User> queryMember(Long roomId);
 }

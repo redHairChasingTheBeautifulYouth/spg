@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -46,4 +47,10 @@ public class TokenUtil {
         return (String)map.get(type);
     }
 */
+    public static Map<String ,Object> getMap(String hash ,String openid){
+        Map<String, Object> claims = new HashMap<>(2<<4);
+        claims.put("hash", hash);
+        claims.put("openid", openid);
+        return claims;
+    }
 }

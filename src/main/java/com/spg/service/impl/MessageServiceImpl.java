@@ -6,6 +6,7 @@ import com.spg.service.MessageService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author
@@ -20,5 +21,11 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public void generateMessage(Message message) {
         messageMapper.insertOne(message);
+    }
+
+    @Override
+    public List<Message> findMeeagePage(Long roomId, Integer pageSize, Integer pageNo) {
+        List<Message> meeagePage = messageMapper.findMeeagePage(roomId, pageSize, pageNo);
+        return meeagePage;
     }
 }

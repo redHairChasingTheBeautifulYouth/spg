@@ -4,6 +4,7 @@ import com.spg.commom.*;
 import com.spg.domin.SuperAdmin;
 import com.spg.service.SuperAdminServcie;
 import com.spg.util.SessionUtil;
+import com.spg.util.TokenUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.Map;
 
 /**
  * @author trevor
@@ -32,7 +34,8 @@ public class SuperAdminController {
     public JsonEntity<String> login(@RequestBody @Validated SuperAdminLogin superAdminLogin){
         JsonEntity<SuperAdmin> login = superAdminServcie.login(superAdminLogin);
         if (login.getCode() > 0) {
-            return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.LOGIN_SUCCESS);
+            Map<String, Object> map = TokenUtil.getMap("liubin", "liubingxfqrewqrtq");
+            return ResponseHelper.createInstance(TokenUtil.generateToken(map) ,MessageCodeEnum.LOGIN_SUCCESS);
         }else {
             return new JsonEntity<>(login.getCode() ,login.getMessage());
         }

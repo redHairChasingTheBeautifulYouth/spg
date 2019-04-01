@@ -3,15 +3,16 @@ package com.spg.service.impl;
 import com.spg.commom.JsonEntity;
 import com.spg.commom.MessageCodeEnum;
 import com.spg.commom.ResponseHelper;
+import com.spg.commom.ReturnChatMessage;
+import com.spg.domin.Message;
 import com.spg.domin.User;
 import com.spg.domin.UserRoom;
-import com.spg.service.BizService;
-import com.spg.service.RoomService;
-import com.spg.service.UserRoomService;
-import com.spg.service.UserService;
+import com.spg.service.*;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -30,6 +31,10 @@ public class BizServiceImpl implements BizService {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private MessageService messageService;
+
 
     @Override
     public JsonEntity<String> enterRoom(Long roomId ,String openid) {
@@ -61,5 +66,32 @@ public class BizServiceImpl implements BizService {
         User user = userService.findByOpenid(openid);
         userRoomService.applyEnterRoom(roomId ,user.getId());
         return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.APPLY_SUCCESS);
+    }
+
+    @Override
+    public JsonEntity<List<ReturnChatMessage>> chatRecord(String openid ,Long roomId, Integer pageSize, Integer pageNo) {
+        User user = userService.findByOpenid(openid);
+        List<Message> meeagePage = messageService.findMeeagePage(roomId, pageSize, pageNo);
+        List<ReturnChatMessage> returnChatMessageList = new ArrayList<>(2<<7);
+        meeagePage.forEach(message -> {
+            ReturnChatMessage returnChatMessage = new ReturnChatMessage();
+            returnChatMessage.setAppName(message.getAppName());
+            if (Objects.equals(user.getId() ,message.getUserId())) {
+                returnChatMessage.setIsMyself(1);
+            }else {
+                returnChatMessage.setIsMyself(0);
+            }
+            returnChatMessage.setMessage(message.getMessage());
+            returnChatMessage.setMessageType(message.getMessageType());
+            returnChatMessage.setPictureUrl(message.getPictureUrl());
+            returnChatMessageList.add(returnChatMessage);
+        });
+        return ResponseHelper.createInstance(returnChatMessageList ,MessageCodeEnum.CREATE_SUCCESS);
+    }
+
+    @Override
+    public JsonEntity<List<User>> queryMember(Long roomId) {
+        List<User> users = userRoomService.queryMember(roomId);
+        return ResponseHelper.createInstance(users ,MessageCodeEnum.QUERY_SUCCESS);
     }
 }

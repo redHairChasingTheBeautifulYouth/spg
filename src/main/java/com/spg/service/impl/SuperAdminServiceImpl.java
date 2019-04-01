@@ -62,6 +62,6 @@ public class SuperAdminServiceImpl implements SuperAdminServcie {
         if (domainNames.isEmpty()) {
             return ResponseHelper.withErrorInstance(MessageCodeEnum.NO_DOMAIN_NAMES);
         }
-        return ResponseHelper.createInstance(domainNames.get(0).getDomainName() ,MessageCodeEnum.CREATE_SUCCESS);
+        return ResponseHelper.createInstance(domainNames.get(0).getDomainName() + "/enter/" + room.getId(),MessageCodeEnum.CREATE_SUCCESS);
     }
 }

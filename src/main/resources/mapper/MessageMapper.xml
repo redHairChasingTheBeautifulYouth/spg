@@ -6,4 +6,19 @@
         message (user_id ,app_name ,room_id ,time ,message_type ,message)
         values (#{message.userId} ,#{message.appName} ,#{message.roomId} ,#{message.time} ,#{message.messageType} ,#{message.message})
     </insert>
+    <select id="findMeeagePage" resultType="com.spg.domin.Message">
+        select
+        user_id userId,
+        app_name userNmae,
+        picture_url pictureUrl,
+        time time,
+        message_type messageType,
+        message message
+        from
+        message
+        where
+        room_id=#{roomId}
+        ORDER BY `time` DESC
+        limit (#{pageNo}-1)*#{pageSize},#{pageSize}
+    </select>
 </mapper>

@@ -28,4 +28,19 @@
         and
         room_id=#{roomId}
     </select>
+    <select id="queryMember" resultType="com.spg.domin.User">
+        select
+        u.app_name appName,
+        u.app_picture_url appPictureUrl
+        from
+        user_room ur,
+        `user` u
+        where
+        ur.user_id=u.id
+        and
+        ur.room_id=#{roomId}
+        and
+        role_type in (1,2,3)
+
+    </select>
 </mapper>

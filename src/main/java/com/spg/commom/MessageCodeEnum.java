@@ -62,7 +62,9 @@ public enum MessageCodeEnum {
 
     RNTER_ROOM_SUCCESS(4 ,"进入房间成功"),
 
-    APPLY_SUCCESS(5 ,"申请成功");
+    APPLY_SUCCESS(5 ,"申请成功"),
+
+    QUERY_SUCCESS(6 ,"查询成功");
 
     /*****************************************               websocket返回消息                    *********************/
 

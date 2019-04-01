@@ -52,7 +52,6 @@ public class WeixinLoginController{
         //判断微信是否已经授权
         TempUser tempUser = (TempUser) request.getServletContext().getAttribute(uuid);
         if(AuthEnum.IS_AUTH.getCode().equals(tempUser.getIsAuth())){
-            SessionUtil.getSession().setAttribute(WebKeys.TOKEN ,tempUser.getToken());
             return ResponseHelper.createInstance(tempUser.getToken() ,MessageCodeEnum.AUTH_SUCCESS);
         }else {
             return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.AUTH_FAILED);

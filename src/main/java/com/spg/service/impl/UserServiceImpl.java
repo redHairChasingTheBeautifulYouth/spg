@@ -18,4 +18,25 @@ public class UserServiceImpl implements UserService {
         return userMapper.findByOpenid(openid);
     }
 
+    @Override
+    public Boolean checkOpenidAndHash(String openid, String hash) {
+        User user = this.findByOpenid(openid);
+        if(user.getOpenid() != null){
+            if(openid.equals(user.getOpenid()) && hash.equals(user.getHash())){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void insertOne(User user) {
+        this.userMapper.insertOne(user);
+    }
+
+    @Override
+    public void updateHash(String hash, String openid) {
+        this.userMapper.updateHash(hash ,openid);
+    }
+
 }

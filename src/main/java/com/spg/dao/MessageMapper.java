@@ -4,6 +4,8 @@ import com.spg.domin.Message;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * @author trevor
  * @date 04/01/19 13:32
@@ -12,4 +14,6 @@ import org.springframework.stereotype.Repository;
 public interface MessageMapper {
 
     void insertOne(@Param("message") Message message);
+
+    List<Message> findMeeagePage(@Param("roomId") Long roomId ,@Param("pageSize") Integer pageSize ,@Param("pageNo") Integer pageNo);
 }

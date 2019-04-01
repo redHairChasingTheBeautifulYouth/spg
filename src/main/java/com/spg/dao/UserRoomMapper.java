@@ -1,8 +1,11 @@
 package com.spg.dao;
 
+import com.spg.domin.User;
 import com.spg.domin.UserRoom;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * @Auther: trevor
@@ -17,4 +20,6 @@ public interface UserRoomMapper {
     void insertOne(@Param("userRoom")UserRoom userRoom);
 
     UserRoom findByRoomIdAndUserId(@Param("roomId") Long roomId ,@Param("userId") Long userId);
+
+    List<User> queryMember(@Param("roomId") Long roomId);
 }

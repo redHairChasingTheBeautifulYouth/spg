@@ -15,6 +15,8 @@ public class Message {
 
     private String appName;
 
+    private String pictureUrl;
+
     /**
      * 房间id
      */
@@ -42,5 +44,6 @@ public class Message {
         this.messageType = chatMessage.getMessageType();
         this.message = chatMessage.getMessage();
         this.appName = chatMessage.getAppName();
+        this.pictureUrl = chatMessage.getPictureUrl();
     }
 }
