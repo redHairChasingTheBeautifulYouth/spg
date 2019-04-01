@@ -20,6 +20,7 @@ public class InterceptorConfigurer implements WebMvcConfigurer{
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new CORSInterceptor()).addPathPatterns("/**");
         registry.addInterceptor(new LoginInterceptor())
                 //添加需要验证登录用户操作权限的请求
                 .addPathPatterns("/**")
