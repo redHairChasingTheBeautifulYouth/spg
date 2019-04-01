@@ -34,7 +34,13 @@ public class InterceptorConfigurer implements WebMvcConfigurer{
                 //排除错误页面
                 .excludePathPatterns("/error.html")
                 //排除超级管理员登陆
-                .excludePathPatterns("/admin/login");
+                .excludePathPatterns("/admin/login")
+                //排除微信转发到微信登录页面
+                .excludePathPatterns("/front/weixin/login")
+                //排除检查微信授权地址
+                .excludePathPatterns("/front/weixin/login/check")
+                //排除微信回调地址
+                .excludePathPatterns("/public/api/weixin/auth");
 
     }
 
