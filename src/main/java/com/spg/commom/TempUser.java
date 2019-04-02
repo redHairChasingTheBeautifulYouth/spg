@@ -19,14 +19,8 @@ public class TempUser {
      */
     private String token;
 
-    /**
-     * openid
-     */
-    private String openid;
-
-    public TempUser(String isAuth, String token , String openid) {
+    public TempUser(String isAuth, String token) {
         this.isAuth = isAuth;
         this.token = token;
-        this.openid = openid;
     }
 }

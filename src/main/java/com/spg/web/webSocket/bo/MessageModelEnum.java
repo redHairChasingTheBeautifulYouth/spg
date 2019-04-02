@@ -10,12 +10,12 @@ public enum  MessageModelEnum {
     /**
      * token 过期
      */
-    TOKEN_TIME_ERROR("-1" ,"token 过期"),
+    TOKEN_TIME_ERROR("-400" ,"token 过期"),
 
     /**
      * token 错误
      */
-    TOKEN_ERROR("-2" ,"token 错误");
+    TOKEN_ERROR("-401" ,"token 错误");
 
     private String code;
 

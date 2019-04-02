@@ -31,7 +31,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @Description:
  */
 @ServerEndpoint(
-        value = "/chat/{chatRoomId}}",
+        value = "/chat/{chatRoomId}",
         configurator = ChatServerConfigurator.class,
         encoders = {ChatEncoder.class},
         decoders = {ChatDecoder.class}
@@ -55,7 +55,7 @@ public class ChatServer {
     private ConcurrentHashMap<String ,CopyOnWriteArrayList<Session>> sessionUsers;
 
     @OnOpen
-    public void startChatChannel(@PathParam("chatRoomId") String roomId  ,EndpointConfig config ,Session session) throws IOException, EncodeException {
+    public void startChatChannel(@PathParam("chatRoomId") String roomId  ,EndpointConfig config ,Session session) throws IOException{
         this.mySession = session;
         String token = session.getRequestParameterMap().get(WebKeys.TOKEN).get(0);
         if (token == null) {
@@ -66,6 +66,7 @@ public class ChatServer {
         Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
         String openid = (String) claims.get(WebKeys.OPEN_ID);
         String hash = (String) claims.get("hash");
+        String timestamp = (String) claims.get("timestamp");
         //三者必须存在,少一样说明token被篡改
         if (openid == null || hash == null) {
             this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
@@ -74,6 +75,11 @@ public class ChatServer {
         //token是否合法
         if(!(userService.checkOpenidAndHash(openid,hash))){
             this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
+            return;
+        }
+        //检查tokie是否过期
+        if (TokenUtil.checkTimeStamp(timestamp)) {
+            this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_TIME_ERROR.getCode()));
             return;
         }
         //发起链接的用户是否是该房间的人

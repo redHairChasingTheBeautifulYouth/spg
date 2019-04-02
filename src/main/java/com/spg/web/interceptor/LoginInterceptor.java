@@ -12,6 +12,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @Auther: trevor
@@ -49,8 +50,9 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
             Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
             String openid = (String) claims.get(WebKeys.OPEN_ID);
             String hash = (String) claims.get("hash");
+            String timestamp = (String) claims.get("timestamp");
             //三者必须存在,少一样说明token被篡改
-            if (openid == null || hash == null) {
+            if (openid == null || hash == null || timestamp == null) {
                 response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
                 return false;
             }
@@ -59,6 +61,32 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
                 response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
                 return false;
             }
+            Long time = (Long)request.getServletContext().getAttribute(openid+hash+timestamp);
+            //超级管理员登录机制与其他不同，直接转发到创建房间页面
+            if (Objects.equals(openid ,"liubingxfqrewqrtq") && Objects.equals(hash ,"liubin")) {
+                if (time == null || TokenUtil.checkTimeStamp(time)) {
+                    request.getServletContext().removeAttribute(openid+hash+timestamp);
+                    response.sendRedirect("/superAdminLogin.html");
+                    return false;
+                }else {
+                    //刷新时间
+                    request.getServletContext().setAttribute(openid+hash+timestamp ,System.currentTimeMillis());
+                    if (!reUrl.startsWith("/admin/create/room")) {
+                        response.sendRedirect("/superAdminIndex.html");
+                        return false;
+                    }
+                    return true;
+                }
+            }else {
+                //过期
+                if (time == null || TokenUtil.checkTimeStamp(time)) {
+                    request.getServletContext().removeAttribute(openid+hash+timestamp);
+                    response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
+                    return false;
+                }
+            }
+            //刷新时间
+            request.getServletContext().setAttribute(openid+hash+timestamp ,System.currentTimeMillis());
             return Boolean.TRUE;
         } catch (Exception e) {
             //token非法

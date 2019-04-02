@@ -18,6 +18,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Auther: trevor
@@ -35,12 +36,17 @@ public class WeixinAuthController {
     @Resource
     private HttpServletRequest request;
 
+    @Resource
+    private ConcurrentHashMap<String ,Long> timestampMap;
+
     @ApiOperation("微信授权回调地址")
     @RequestMapping(value = "/public/api/weixin/auth", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public void weixinAuth() throws IOException {
         String code = request.getParameter(WebKeys.CODE);
         String uuid = request.getParameter(WebKeys.UUID);
-        if (uuid == null) {
+        TempUser tempUser = (TempUser) request.getServletContext().getAttribute(uuid);
+        //授权来源不正确
+        if (tempUser == null) {
             return;
         }
         JsonEntity<Map<String, Object>> jsonEntity = weixinService.weixinAuth(code);
@@ -49,9 +55,13 @@ public class WeixinAuthController {
         }else {
             //生成token
             Map<String, Object> map = jsonEntity.getData();
+            String openid = (String) map.get(WebKeys.OPEN_ID);
+            String hash = (String) map.get("hash");
+            String timestamp = (String) map.get("timestamp");
             String token = TokenUtil.generateToken(map);
-            TempUser tempUser = new TempUser(AuthEnum.IS_AUTH.getCode() ,token ,(String) map.get(WebKeys.OPEN_ID));
+            tempUser = new TempUser(AuthEnum.IS_AUTH.getCode() ,token);
             request.getServletContext().setAttribute(uuid,tempUser);
+            request.getServletContext().setAttribute(openid+hash+timestamp ,System.currentTimeMillis());
         }
     }
 

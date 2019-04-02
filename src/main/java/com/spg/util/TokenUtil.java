@@ -42,16 +42,29 @@ public class TokenUtil {
         return claims;
     }
 
-    /*public static String getTokenValue (String type ,String token) {
-        Map<String,Object> map = getClaimsFromToken(token);
-        return (String)map.get(type);
-    }
-*/
     public static Map<String ,Object> getMap(String hash ,String openid){
         Map<String, Object> claims = new HashMap<>(2<<4);
         claims.put("hash", hash);
         claims.put("openid", openid);
         claims.put("timestamp" ,System.currentTimeMillis());
         return claims;
+    }
+
+    /**
+     *
+     * @param time
+     * @return
+     */
+    public static boolean checkTimeStamp(Long time) {
+        // 有效期: 1个小时,单位: ms
+        long expires = 60 * 1000 * 60;
+        //两者相差的时间,单位(ms)
+        long timestamp = System.currentTimeMillis() - time;
+        if(timestamp > expires){
+            //过期
+            return false;
+        }else {
+            return true;
+        }
     }
 }
