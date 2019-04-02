@@ -1,6 +1,7 @@
 package com.spg.dao;
 
-import com.spg.domin.User;
+import com.spg.commom.LoginUser;
+import com.spg.commom.RoomMember;
 import com.spg.domin.UserRoom;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -21,5 +22,9 @@ public interface UserRoomMapper {
 
     UserRoom findByRoomIdAndUserId(@Param("roomId") Long roomId ,@Param("userId") Long userId);
 
-    List<User> queryMember(@Param("roomId") Long roomId);
+    List<RoomMember> queryMember(@Param("roomId") Long roomId);
+
+    void updateStatus(@Param("roomId") Long roomId ,@Param("userId") Long userId ,@Param("status") Integer status);
+
+    LoginUser findLoginUser(@Param("roomId") Long roomId ,@Param("userId") Long userId);
 }

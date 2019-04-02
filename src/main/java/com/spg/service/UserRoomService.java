@@ -1,7 +1,10 @@
 package com.spg.service;
 
+import com.spg.commom.LoginUser;
+import com.spg.commom.RoomMember;
 import com.spg.domin.User;
 import com.spg.domin.UserRoom;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -20,5 +23,9 @@ public interface UserRoomService {
 
     void applyEnterRoom(Long roomId ,Long userId);
 
-    List<User> queryMember(Long roomId);
+    List<RoomMember> queryMember(Long roomId);
+
+    void updateStatus(Long roomId ,Long userId ,Integer status);
+
+    LoginUser findLoginUser(Long roomId ,Long userId);
 }

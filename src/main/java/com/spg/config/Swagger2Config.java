@@ -48,8 +48,8 @@ public class Swagger2Config {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("swagger-api文档")
-                .description("小私群接口文档")
+                .title("小私群接口文档")
+                .description("swagger-api文档")
                 .version("1.0")
                 .build();
     }

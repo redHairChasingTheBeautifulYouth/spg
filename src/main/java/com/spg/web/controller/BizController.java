@@ -39,11 +39,17 @@ public class BizController {
     private BizService bizService;
 
     @ApiOperation(value = "得到一个新的token")
-    @RequestMapping(value = "/get/token", method = {RequestMethod.POST}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(value = "/get/token", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<String> getToken(){
-        Map<String,Object> claims =  TokenUtil.getClaimsFromToken(request.getParameter("token"));
+        Map<String,Object> claims =  TokenUtil.getClaimsFromToken(request.getHeader("token"));
         claims.put("timestamp" ,System.currentTimeMillis());
         return ResponseHelper.createInstance(TokenUtil.generateToken(claims) , MessageCodeEnum.CREATE_SUCCESS);
+    }
+
+    @ApiOperation(value = "查询得到本房间的登陆用户信息,role为1房主，2管理员，3普通成员")
+    @RequestMapping(value = "/login/user/{roomId}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public JsonEntity<LoginUser> getLoginUser(@PathVariable("roomId") Long roomId){
+        return bizService.getLoginUser(getOpenid() ,roomId);
     }
 
     @ApiOperation(value = "用于转发到聊天室")
@@ -53,13 +59,13 @@ public class BizController {
     }
 
     @ApiOperation(value = "进入房间，检查用户是否是第一个进入的，若是则成为房主，若不是则检查是否是房主的好友")
-    @RequestMapping(value = "/enter/{roomId}", method = {RequestMethod.POST}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(value = "/enter/{roomId}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<String> enterRoom(@PathVariable("roomId") Long roomId){
         return bizService.enterRoom(roomId ,getOpenid());
     }
 
     @ApiOperation(value = "申请成为房主的好友")
-    @RequestMapping(value = "/apply/{roomId}", method = {RequestMethod.POST}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(value = "/apply/{roomId}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<String> applyRnterRoom(@PathVariable("roomId") Long roomId){
         return bizService.applyRnterRoom(roomId ,getOpenid());
     }
@@ -70,10 +76,18 @@ public class BizController {
         return bizService.chatRecord(getOpenid() ,roomId ,pageSize ,pageNo);
     }
 
-    @ApiOperation(value = "查询群成员")
+    @ApiOperation(value = "查询群成员,普通成员查询已经通过申请的，管理员和房主查询已申请通过的、正在申请的、拒绝的。status为1房主，2管理员，3普通成员，4正在申请的，5拒绝的")
     @RequestMapping(value = "/chat/room/{roomId}/member", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public JsonEntity<List<User>> qyeryMember(@PathVariable("roomId") Long roomId){
-        return bizService.queryMember(roomId);
+    public JsonEntity<List<RoomMember>> qyeryMember(@PathVariable("roomId") Long roomId){
+        return bizService.queryMember(getOpenid() ,roomId);
+    }
+
+    @ApiOperation(value = "通过好友申请、拒绝好友申请、将普通好友变管理员、取消管理员身份变成普通好友、将普通好友踢出，operation码分别是1，2，3，4，5")
+    @RequestMapping(value = "/chat/room/{roomId}/member/{byOperationUserId}/{operation}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public JsonEntity<String> operationChatRoom(@PathVariable("roomId") Long roomId,
+                                                @PathVariable("byOperationUserId") Long byOperationUserId,
+                                                @PathVariable("operation") Integer operation){
+        return bizService.operationChatRoom(getOpenid() ,byOperationUserId ,roomId ,operation);
     }
 
     private String getOpenid(){

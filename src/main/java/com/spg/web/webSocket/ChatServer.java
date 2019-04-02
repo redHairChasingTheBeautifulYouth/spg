@@ -19,6 +19,7 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import javax.websocket.server.ServerEndpointConfig;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,13 +76,13 @@ public class ChatServer {
             this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
             return;
         }
+        //发起链接的用户是否是该房间的人
         User user = userService.findByOpenid(openid);
         this.mySession.getUserProperties().put("user" ,user);
         this.endpointConfig = (ServerEndpointConfig) config;
         ChatServerConfigurator csc = (ChatServerConfigurator) endpointConfig.getConfigurator();
         this.chatMessageMap = csc.getMessages();
         this.sessionUsers = csc.getSessions();
-
     }
 
     @OnMessage
@@ -103,8 +104,17 @@ public class ChatServer {
     }
 
     @OnClose
-    public void endChatChannel(){
-
+    public void endChatChannel(@PathParam("chatRoomId") String roomId){
+        //关闭链接时移除聊天用户
+        CopyOnWriteArrayList<Session> sessions = this.sessionUsers.get(roomId);
+        Iterator<Session> itrSession = sessions.iterator();
+        while (itrSession.hasNext()) {
+            Session targetSession = itrSession.next();
+            if (targetSession.equals(this.mySession)) {
+                itrSession.remove();
+                break;
+            }
+        }
     }
 
 

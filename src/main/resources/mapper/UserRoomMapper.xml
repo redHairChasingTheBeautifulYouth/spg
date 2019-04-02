@@ -7,6 +7,17 @@
         values (#{userRoom.userId} ,#{userRoom.roomId} ,#{userRoom.roleType})
     </insert>
 
+    <update id="updateStatus">
+        update
+        user_room
+        set
+        role_type=#{status}
+        where
+        user_id=#{userId}
+        and
+        room_id=#{roomId}
+    </update>
+
     <select id="isExist" resultType="java.lang.Long">
         select
         count(id)
@@ -28,10 +39,12 @@
         and
         room_id=#{roomId}
     </select>
-    <select id="queryMember" resultType="com.spg.domin.User">
+    <select id="queryMember" resultType="com.spg.commom.RoomMember">
         select
+        u.id id,
         u.app_name appName,
-        u.app_picture_url appPictureUrl
+        u.app_picture_url pictureUrl,
+        ur.role_type status
         from
         user_room ur,
         `user` u
@@ -39,8 +52,21 @@
         ur.user_id=u.id
         and
         ur.room_id=#{roomId}
+    </select>
+    <select id="findLoginUser" resultType="com.spg.commom.LoginUser">
+        select
+        u.id id,
+        u.app_name appName,
+        u.app_picture_url pictureUrl,
+        ur.role_type role
+        from
+        user_room ur,
+        `user` u
+        where
+        ur.user_id=#{userId}
         and
-        role_type in (1,2,3)
-
+        ur.room_id=#{roomId}
+        and
+        ur.user_id=u.id
     </select>
 </mapper>

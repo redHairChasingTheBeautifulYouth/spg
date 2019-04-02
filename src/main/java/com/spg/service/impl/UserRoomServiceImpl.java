@@ -1,11 +1,14 @@
 package com.spg.service.impl;
 
+import com.spg.commom.LoginUser;
+import com.spg.commom.RoomMember;
 import com.spg.dao.UserRoomMapper;
 import com.spg.domin.User;
 import com.spg.domin.UserRoom;
 import com.spg.service.UserRoomService;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -47,9 +50,19 @@ public class UserRoomServiceImpl implements UserRoomService {
     }
 
     @Override
-    public List<User> queryMember(Long roomId) {
-        List<User> users = userRoomMapper.queryMember(roomId);
-        return users;
+    public List<RoomMember> queryMember(Long roomId) {
+        List<RoomMember> roomMembers = userRoomMapper.queryMember(roomId);
+        return roomMembers;
+    }
+
+    @Override
+    public void updateStatus(Long roomId, Long userId, Integer status) {
+        userRoomMapper.updateStatus(roomId ,userId ,status);
+    }
+
+    @Override
+    public LoginUser findLoginUser(Long roomId, Long userId) {
+        return userRoomMapper.findLoginUser(roomId ,userId);
     }
 
 

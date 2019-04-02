@@ -43,6 +43,8 @@ public enum MessageCodeEnum {
 
     NOT_FRIENDS(-7 ,"还不是房主的好友"),
 
+    NO_AUTH_OPERATION(-8, "无权限操作"),
+
     /**
      * 草，参数错误
      */
@@ -63,6 +65,10 @@ public enum MessageCodeEnum {
     RNTER_ROOM_SUCCESS(4 ,"进入房间成功"),
 
     APPLY_SUCCESS(5 ,"申请成功"),
+
+    OPERATION_SUCCESS(7 ,"操作成功"),
+
+    OPERATION_FAILED(7 ,"操作失败"),
 
     QUERY_SUCCESS(6 ,"查询成功");
 
