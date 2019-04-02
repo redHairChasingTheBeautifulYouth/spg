@@ -51,6 +51,7 @@ public class TokenUtil {
         Map<String, Object> claims = new HashMap<>(2<<4);
         claims.put("hash", hash);
         claims.put("openid", openid);
+        claims.put("timestamp" ,System.currentTimeMillis());
         return claims;
     }
 }
