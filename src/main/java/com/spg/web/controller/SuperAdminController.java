@@ -34,8 +34,7 @@ public class SuperAdminController {
     @Resource
     private HttpServletRequest request;
 
-    @Resource
-    private ConcurrentHashMap<String ,Long> timestampMap;
+
 
     @ApiOperation(value = "超级管理员登陆")
     @RequestMapping(value = "/admin/login", method = {RequestMethod.POST}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -43,11 +42,9 @@ public class SuperAdminController {
         JsonEntity<SuperAdmin> login = superAdminServcie.login(superAdminLogin);
         if (login.getCode() > 0) {
             Map<String, Object> map = TokenUtil.getMap("liubin", "liubingxfqrewqrtq");
-            String openid = (String)map.get(WebKeys.OPEN_ID);
-            String hash = (String)map.get("hash");
-            String timestamp = (String)map.get("timestamp");
-            timestampMap.put(openid+hash+timestamp ,System.currentTimeMillis());
-            return ResponseHelper.createInstance(TokenUtil.generateToken(map) ,MessageCodeEnum.LOGIN_SUCCESS);
+            String token = TokenUtil.generateToken(map);
+            SessionUtil.getSession().setAttribute("token" ,token);
+            return ResponseHelper.createInstance(token ,MessageCodeEnum.LOGIN_SUCCESS);
         }else {
             return new JsonEntity<>(login.getCode() ,login.getMessage());
         }

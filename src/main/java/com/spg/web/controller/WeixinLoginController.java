@@ -17,6 +17,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 一句话描述该类作用:【】
@@ -34,6 +35,9 @@ public class WeixinLoginController{
     @Resource
     private HttpServletResponse response;
 
+    @Resource
+    private ConcurrentHashMap<String ,Object> concurrentHashMap;
+
     @ApiOperation("微信登录并转发到微信登录页面")
     @RequestMapping(value = "/front/weixin/login/forward", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public void login() throws ServletException, IOException {
@@ -41,7 +45,7 @@ public class WeixinLoginController{
         String uuid = RandomUtils.getRandomChars(40);
         //使用全局变量，微信授权成功后改变值
         TempUser tempUser = new TempUser(AuthEnum.NOT_AUTH.getCode() ,"");
-        request.getServletContext().setAttribute(uuid ,tempUser);
+        concurrentHashMap.put(uuid ,tempUser);
         request.getRequestDispatcher("/weixinlogin.html?uuid=" + uuid + "&reUrl=" + request.getParameter("reUrl")).forward(request,response);
     }
 
@@ -49,11 +53,13 @@ public class WeixinLoginController{
     @RequestMapping(value = "/front/weixin/login/check", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<String> checkAuth(@RequestParam("uuid") String uuid)  {
         //判断微信是否已经授权
-        TempUser tempUser = (TempUser) request.getServletContext().getAttribute(uuid);
+        TempUser tempUser = (TempUser) concurrentHashMap.get(uuid);
         String token = tempUser.getToken();
         String isAuth = tempUser.getIsAuth();
+        //授权成功
         if(AuthEnum.IS_AUTH.getCode().equals(isAuth)){
-            request.getServletContext().removeAttribute(uuid);
+            concurrentHashMap.remove(uuid);
+            SessionUtil.getSession().setAttribute("token" ,token);
             return ResponseHelper.createInstance(token ,MessageCodeEnum.AUTH_SUCCESS);
         }else {
             return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.AUTH_FAILED);

@@ -37,7 +37,7 @@ public class WeixinAuthController {
     private HttpServletRequest request;
 
     @Resource
-    private ConcurrentHashMap<String ,Long> timestampMap;
+    private ConcurrentHashMap<String ,Object> concurrentHashMap;
 
     @ApiOperation("微信授权回调地址")
     @RequestMapping(value = "/public/api/weixin/auth", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -55,13 +55,9 @@ public class WeixinAuthController {
         }else {
             //生成token
             Map<String, Object> map = jsonEntity.getData();
-            String openid = (String) map.get(WebKeys.OPEN_ID);
-            String hash = (String) map.get("hash");
-            String timestamp = (String) map.get("timestamp");
             String token = TokenUtil.generateToken(map);
             tempUser = new TempUser(AuthEnum.IS_AUTH.getCode() ,token);
-            request.getServletContext().setAttribute(uuid,tempUser);
-            request.getServletContext().setAttribute(openid+hash+timestamp ,System.currentTimeMillis());
+            concurrentHashMap.put(uuid,tempUser);
         }
     }
 

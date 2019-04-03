@@ -16,8 +16,8 @@ public class SpgApplication {
     }
 
     @Bean
-    public ConcurrentHashMap<String ,Long> generateMap(){
-        return new ConcurrentHashMap<String, Long>(2<<12);
+    public ConcurrentHashMap<String ,Object> generateMap(){
+        return new ConcurrentHashMap<String, Object>(2<<8);
     }
 
 }

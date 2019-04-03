@@ -2,6 +2,7 @@ package com.spg.web.interceptor;
 
 import com.spg.commom.WebKeys;
 import com.spg.service.UserService;
+import com.spg.util.SessionUtil;
 import com.spg.util.TokenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -45,48 +46,33 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
             response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
             return false;
         }
+        //session token
+        String sessionToken = (String) SessionUtil.getSession().getAttribute("token");
+        if (sessionToken == null) {
+            response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
+            return false;
+        }
+        if (!Objects.equals(token ,sessionToken)) {
+            response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
+            return false;
+        }
         try {
             //解析token
             Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
             String openid = (String) claims.get(WebKeys.OPEN_ID);
             String hash = (String) claims.get("hash");
             String timestamp = (String) claims.get("timestamp");
+
             //三者必须存在,少一样说明token被篡改
             if (openid == null || hash == null || timestamp == null) {
                 response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
                 return false;
             }
-            //三者合法才通过
+            //合法才通过
             if(!(userService.checkOpenidAndHash(openid,hash))){
                 response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
                 return false;
             }
-            Long time = (Long)request.getServletContext().getAttribute(openid+hash+timestamp);
-            //超级管理员登录机制与其他不同，直接转发到创建房间页面
-            if (Objects.equals(openid ,"liubingxfqrewqrtq") && Objects.equals(hash ,"liubin")) {
-                if (time == null || TokenUtil.checkTimeStamp(time)) {
-                    request.getServletContext().removeAttribute(openid+hash+timestamp);
-                    response.sendRedirect("/superAdminLogin.html");
-                    return false;
-                }else {
-                    //刷新时间
-                    request.getServletContext().setAttribute(openid+hash+timestamp ,System.currentTimeMillis());
-                    if (!reUrl.startsWith("/admin/create/room")) {
-                        response.sendRedirect("/superAdminIndex.html");
-                        return false;
-                    }
-                    return true;
-                }
-            }else {
-                //过期
-                if (time == null || TokenUtil.checkTimeStamp(time)) {
-                    request.getServletContext().removeAttribute(openid+hash+timestamp);
-                    response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
-                    return false;
-                }
-            }
-            //刷新时间
-            request.getServletContext().setAttribute(openid+hash+timestamp ,System.currentTimeMillis());
             return Boolean.TRUE;
         } catch (Exception e) {
             //token非法

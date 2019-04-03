@@ -7,6 +7,7 @@ import com.spg.commom.ResponseHelper;
 import com.spg.domin.User;
 import com.spg.service.UserService;
 import com.spg.util.RandomUtils;
+import com.spg.util.SessionUtil;
 import com.spg.util.TokenUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -50,7 +51,7 @@ public class TestLoginController {
         user.setAppPictureUrl("https://raw.githubusercontent.com/redHairChasingTheBeautifulYouth/Java-Guide/master/imgs/20181101-1.jpg");
         userService.insertOne(user);
         log.info("测试登录成功 ，hash值---------" + hash);
-
+        SessionUtil.getSession().setAttribute("token" ,token);
         return ResponseHelper.createInstance(token ,MessageCodeEnum.AUTH_SUCCESS);
     }
 }
