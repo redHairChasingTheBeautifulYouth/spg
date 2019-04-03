@@ -3,6 +3,7 @@ package com.spg.web.webSocket.config;
 import com.spg.commom.ChatMessage;
 import lombok.Data;
 
+import javax.servlet.http.HttpSession;
 import javax.websocket.HandshakeResponse;
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
@@ -31,6 +32,7 @@ public class ChatServerConfigurator extends ServerEndpointConfig.Configurator {
      */
     @Override
     public void modifyHandshake(ServerEndpointConfig sec , HandshakeRequest request , HandshakeResponse response){
+        HttpSession httpSession=(HttpSession) request.getHttpSession();
 
     }
 }

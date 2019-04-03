@@ -41,6 +41,7 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
         //从什么页面进来
         String reUrl = request.getRequestURI();
         //获取token
+
         String token = request.getHeader(WebKeys.TOKEN);
         if (token == null) {
             response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);

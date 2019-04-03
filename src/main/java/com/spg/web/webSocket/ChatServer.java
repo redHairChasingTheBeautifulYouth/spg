@@ -77,11 +77,6 @@ public class ChatServer {
             this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
             return;
         }
-        //检查tokie是否过期
-        if (TokenUtil.checkTimeStamp(timestamp)) {
-            this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_TIME_ERROR.getCode()));
-            return;
-        }
         //发起链接的用户是否是该房间的人
         User user = userService.findByOpenid(openid);
         this.mySession.getUserProperties().put("user" ,user);
