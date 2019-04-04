@@ -35,8 +35,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateHash(String hash, String openid) {
-        this.userMapper.updateHash(hash ,openid);
+    public void updateUser(User user) {
+        this.userMapper.updateUser(user);
     }
 
 }

@@ -10,7 +10,7 @@ public interface UserService {
 
     void insertOne(User user);
 
-    void updateHash(String hash ,String openid);
+    void updateUser(User user);
 
 
 

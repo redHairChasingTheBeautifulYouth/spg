@@ -38,9 +38,15 @@ public class WeixinLoginController{
     @Resource
     private ConcurrentHashMap<String ,Object> concurrentHashMap;
 
+    @ApiOperation("token过期后,使用refresh_token重新获取微信token,获取用户信息，若refresh_token过期须重新授权")
+    @RequestMapping(value = "/front/weixin/login/refresh", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public void refresh() throws ServletException, IOException {
+
+    }
+
     @ApiOperation("微信登录并转发到微信登录页面")
     @RequestMapping(value = "/front/weixin/login/forward", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public void login() throws ServletException, IOException {
+    public void weixinForward() throws ServletException, IOException {
         //用户临时凭证
         String uuid = RandomUtils.getRandomChars(40);
         //使用全局变量，微信授权成功后改变值

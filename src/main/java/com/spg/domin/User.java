@@ -31,6 +31,10 @@ public class User {
      */
     private String appName;
 
+    private String accessToken;
+
+    private String refreshToken;
+
     /**
      * 用户头像地址
      */

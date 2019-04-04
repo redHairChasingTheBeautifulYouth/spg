@@ -55,10 +55,15 @@ public class WeixinServiceImpl implements WeixinService {
             User user = userService.findByOpenid(openid);
             if (user == null) {
                 //新增
-                userService.insertOne(generateUser(hash ,userInfoMap));
+                userService.insertOne(generateUser(hash ,userInfoMap ,accessTokenMap));
             } else {
-                //更新hash
-                userService.updateHash(hash ,openid);
+                //更新hash、accessToken、refreshToken
+                User user1 = new User();
+                user1.setOpenid(openid);
+                user1.setHash(hash);
+                user1.setAccessToken(accessTokenMap.get(WebKeys.ACCESS_TOKEN));
+                user1.setRefreshToken(accessTokenMap.get(WebKeys.REFRESH_TOKEN));
+                userService.updateUser(user1);
             }
             return ResponseHelper.createInstance(claims ,MessageCodeEnum.AUTH_SUCCESS);
         }
@@ -68,13 +73,15 @@ public class WeixinServiceImpl implements WeixinService {
      * 生成一个user
      * @return
      */
-    private User generateUser(String hash ,Map<String, String> userInfoMap){
+    private User generateUser(String hash ,Map<String, String> userInfoMap ,Map<String, String> accessTokenMap){
         User user = new User();
         user.setOpenid(userInfoMap.get("openid"));
         user.setAppName(userInfoMap.get("nickname"));
         //用户头像，最后一个数值代表正方形头像大小（有0、46、64、96、132数值可选，0代表640*640正方形头像），用户没有头像时该项为空
         user.setAppPictureUrl(userInfoMap.get("headimgurl"));
         user.setHash(hash);
+        user.setAccessToken(accessTokenMap.get(WebKeys.ACCESS_TOKEN));
+        user.setRefreshToken(accessTokenMap.get(WebKeys.REFRESH_TOKEN));
         return user;
     }
 }

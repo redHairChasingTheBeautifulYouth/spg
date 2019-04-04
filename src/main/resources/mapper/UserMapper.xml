@@ -6,11 +6,13 @@
         `user` (openid ,hash ,app_name ,app_picture_url)
         values (#{user.openid} ,#{user.hash} ,#{user.appName} ,#{user.appPictureUrl})
     </insert>
-    <update id="updateHash">
+    <update id="updateUser">
         update
         `user`
         set
-        hash=#{hash}
+        hash=#{user.hash},
+        refresh_token=#{user.refreshToken},
+        access_token=#{user.accessToken}
         where
         openid=#{openid}
     </update>

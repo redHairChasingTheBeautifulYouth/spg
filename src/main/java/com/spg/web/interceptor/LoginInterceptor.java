@@ -50,7 +50,7 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
         //session token
         String sessionToken = (String) SessionUtil.getSession().getAttribute("token");
         if (sessionToken == null) {
-            response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
+            response.sendRedirect("/front/weixin/login/refresh");
             return false;
         }
         if (!Objects.equals(token ,sessionToken)) {

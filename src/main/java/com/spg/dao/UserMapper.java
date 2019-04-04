@@ -11,5 +11,5 @@ public interface UserMapper {
 
     void insertOne(@Param("user") User user);
 
-    void updateHash(@Param("hash") String hash, @Param("openid") String openid);
+    void updateUser(@Param("user") User user);
 }

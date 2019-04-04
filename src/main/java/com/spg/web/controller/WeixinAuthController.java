@@ -44,7 +44,7 @@ public class WeixinAuthController {
     public void weixinAuth() throws IOException {
         String code = request.getParameter(WebKeys.CODE);
         String uuid = request.getParameter(WebKeys.UUID);
-        TempUser tempUser = (TempUser) request.getServletContext().getAttribute(uuid);
+        TempUser tempUser = (TempUser) concurrentHashMap.get(uuid);
         //授权来源不正确
         if (tempUser == null) {
             return;
