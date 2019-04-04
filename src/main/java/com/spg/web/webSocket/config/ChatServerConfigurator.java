@@ -23,7 +23,6 @@ public class ChatServerConfigurator extends ServerEndpointConfig.Configurator {
 
     private ConcurrentHashMap<String , CopyOnWriteArrayList<Session>> sessions = new ConcurrentHashMap<>(2<<9);
 
-
     /**
      * 拦截打开握手阶段的HTTP请求和响应
      * @param sec

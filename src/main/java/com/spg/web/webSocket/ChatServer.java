@@ -167,6 +167,9 @@ public class ChatServer {
      */
     private void addNewUser(String roomId){
         CopyOnWriteArrayList<Session> sessions = this.sessionUsers.get(roomId);
+        if (sessions == null) {
+            CopyOnWriteArrayList<Session> newSessions = new CopyOnWriteArrayList<>();
+        }
         sessions.add(mySession);
     }
 
