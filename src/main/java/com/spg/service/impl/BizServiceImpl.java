@@ -1,10 +1,14 @@
 package com.spg.service.impl;
 
+import com.google.common.collect.ImmutableList;
 import com.spg.commom.*;
 import com.spg.domin.Message;
 import com.spg.domin.User;
 import com.spg.domin.UserRoom;
-import com.spg.service.*;
+import com.spg.service.BizService;
+import com.spg.service.MessageService;
+import com.spg.service.RoomService;
+import com.spg.service.UserRoomService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -29,20 +33,18 @@ public class BizServiceImpl implements BizService {
     private UserRoomService userRoomService;
 
     @Resource
-    private UserService userService;
-
-    @Resource
     private MessageService messageService;
+
+    private final static ImmutableList<Integer> ROOM_MEMBER_AUTH = ImmutableList.of(1,2,3);
 
 
     @Override
-    public JsonEntity<String> enterRoom(Long roomId ,String openid) {
+    public JsonEntity<String> enterRoom(Long roomId ,User user) {
         Long roomCount = roomService.isExist(roomId);
         if (Objects.equals(roomCount ,0L)) {
             return ResponseHelper.withErrorInstance(MessageCodeEnum.ROOM_NOT_EXIST);
         }
         String roomIdStr = String.valueOf(roomId).intern();
-        User user = userService.findByOpenid(openid);
         synchronized (roomIdStr) {
             Long countUserRoom = userRoomService.isExist(roomId);
             //成为房主
@@ -53,16 +55,18 @@ public class BizServiceImpl implements BizService {
             }
         }
         UserRoom userRoom = userRoomService.findByRoomIdAndUserId(roomId ,user.getId());
-        if (userRoom == null || Objects.equals(userRoom.getRoleType() ,4)) {
-            return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.NOT_FRIENDS);
-        }else {
+        if (userRoom != null && ROOM_MEMBER_AUTH.contains(userRoom.getRoleType())) {
             return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.RNTER_ROOM_SUCCESS);
+        }else {
+            return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.NOT_FRIENDS);
         }
     }
 
     @Override
-    public JsonEntity<String> applyRnterRoom(Long roomId ,String openid) {
-        User user = userService.findByOpenid(openid);
+    public JsonEntity<String> applyRnterRoom(Long roomId ,User user) {
+        if (!isRoomExist(user.getId() ,roomId)) {
+            return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.ROOM_NOT_EXIST);
+        }
         UserRoom byRoomIdAndUserId = userRoomService.findByRoomIdAndUserId(roomId, user.getId());
         if (byRoomIdAndUserId == null) {
             userRoomService.applyEnterRoom(roomId ,user.getId());
@@ -73,9 +77,18 @@ public class BizServiceImpl implements BizService {
     }
 
     @Override
-    public JsonEntity<List<ReturnChatMessage>> chatRecord(String openid ,Long roomId, Integer pageSize, Integer pageNo) {
-        User user = userService.findByOpenid(openid);
-        List<Message> meeagePage = messageService.findMeeagePage(roomId, pageSize, pageNo);
+    public JsonEntity<List<ReturnChatMessage>> chatRecord(User user ,Long roomId, Integer pageSize, Integer pageNo) {
+        //房间是否存在
+        if (!this.isRoomExist(user.getId() ,roomId)) {
+            return ResponseHelper.withErrorInstance(MessageCodeEnum.ROOM_NOT_EXIST);
+        }
+        //用户的在房间的状态是否是1，2，3
+        UserRoom userRoom = userRoomService.findByRoomIdAndUserId(roomId ,user.getId());
+        if (userRoom == null || !ROOM_MEMBER_AUTH.contains(userRoom.getRoleType())) {
+            return ResponseHelper.withErrorInstance(MessageCodeEnum.NOT_FRIENDS);
+        }
+        Integer start = (pageNo -1) * pageSize;
+        List<Message> meeagePage = messageService.findMeeagePage(roomId, start, pageSize);
         List<ReturnChatMessage> returnChatMessageList = new ArrayList<>(2<<7);
         meeagePage.forEach(message -> {
             ReturnChatMessage returnChatMessage = new ReturnChatMessage();
@@ -90,21 +103,27 @@ public class BizServiceImpl implements BizService {
             returnChatMessage.setPictureUrl(message.getPictureUrl());
             returnChatMessageList.add(returnChatMessage);
         });
-        return ResponseHelper.createInstance(returnChatMessageList ,MessageCodeEnum.CREATE_SUCCESS);
+        return ResponseHelper.createInstance(returnChatMessageList ,MessageCodeEnum.QUERY_SUCCESS);
     }
 
     @Override
-    public JsonEntity<List<RoomMember>> queryMember(String openid ,Long roomId) {
+    public JsonEntity<List<RoomMember>> queryMember(User user ,Long roomId) {
+        if (!isRoomExist(user.getId() ,roomId)) {
+            return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.ROOM_NOT_EXIST);
+        }
         List<RoomMember> roomMembers = userRoomService.queryMember(roomId);
-        User byOpenid = userService.findByOpenid(openid);
+        if (roomMembers.isEmpty()) {
+            log.error("房间的人为空，登录人的id：" + user.getId());
+            return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.ROOM_NOT_EXIST);
+        }
         RoomMember roomMember = null;
         for (RoomMember r : roomMembers) {
-            if (Objects.equals(r.getId() ,byOpenid.getId())) {
+            if (Objects.equals(r.getId() ,user.getId())) {
                 roomMember = r;
                 break;
             }
         }
-        if (roomMember == null) {
+        if (roomMember == null || !ROOM_MEMBER_AUTH.contains(roomMember.getStatus())) {
             return ResponseHelper.withErrorInstance(MessageCodeEnum.NOT_FRIENDS);
         }
         //房主或管理员看全部，其他看1，2，3
@@ -123,15 +142,13 @@ public class BizServiceImpl implements BizService {
 
     /**
      * 通过好友申请、拒绝好友申请、将普通好友变管理员、取消管理员身份、将好友踢出，operation码分别是1，2，3，4，5
-     * @param openid
      * @param byOperationUserId
      * @param roomId
      * @param operation
      * @return
      */
     @Override
-    public JsonEntity<String> operationChatRoom(String openid, Long byOperationUserId ,Long roomId, Integer operation) {
-        User user = userService.findByOpenid(openid);
+    public JsonEntity<String> operationChatRoom(User user, Long byOperationUserId ,Long roomId, Integer operation) {
         if (Objects.equals(operation ,1)) {
             return this.passApply(user.getId() ,byOperationUserId ,roomId);
         }else if (Objects.equals(operation ,2)) {
@@ -146,9 +163,18 @@ public class BizServiceImpl implements BizService {
         return null;
     }
 
+    /**
+     * 查询得到本房间的登陆用户信息,role为1房主，2管理员，3普通成员
+     * @param user
+     * @param roomId
+     * @return
+     */
     @Override
-    public JsonEntity<LoginUser> getLoginUser(String openid ,Long roomId) {
-        User user = userService.findByOpenid(openid);
+    public JsonEntity<LoginUser> getLoginUser(User user ,Long roomId) {
+        if (!isRoomExist(user.getId() ,roomId)) {
+            return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.ROOM_NOT_EXIST);
+        }
+
         LoginUser loginUser = userRoomService.findLoginUser(roomId, user.getId());
         return ResponseHelper.createInstance(loginUser ,MessageCodeEnum.QUERY_SUCCESS);
     }
@@ -261,6 +287,20 @@ public class BizServiceImpl implements BizService {
     private Boolean checkByOperationUserStatus(Long byOperationUserId ,Long roomId ,Integer status){
         UserRoom byOperationUserRoom = userRoomService.findByRoomIdAndUserId(roomId, byOperationUserId);
         if (!Objects.equals(byOperationUserRoom.getRoleType() ,status)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 检查房间是否存在
+     * @param roomId
+     * @return
+     */
+    private Boolean isRoomExist(Long userId,Long roomId){
+        Long isExist = roomService.isExist(roomId);
+        if (Objects.equals(isExist ,0L)) {
+            log.error("房间不存在，登录人id：" + userId);
             return false;
         }
         return true;

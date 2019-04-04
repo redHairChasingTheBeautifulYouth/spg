@@ -6,8 +6,6 @@ public interface UserService {
 
     User findByOpenid(String openid);
 
-    Boolean checkOpenidAndHash(String openid,String hash);
-
     void insertOne(User user);
 
     void updateUser(User user);

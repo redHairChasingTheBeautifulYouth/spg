@@ -16,16 +16,16 @@ import java.util.List;
  */
 public interface BizService {
 
-    JsonEntity<String> enterRoom(Long roomId ,String openid);
+    JsonEntity<String> enterRoom(Long roomId ,User user);
 
-    JsonEntity<String> applyRnterRoom(Long roomId ,String openid);
+    JsonEntity<String> applyRnterRoom(Long roomId ,User user);
 
-    JsonEntity<List<ReturnChatMessage>> chatRecord(String openid , Long roomId , Integer pageSize , Integer pageNo);
+    JsonEntity<List<ReturnChatMessage>> chatRecord(User user , Long roomId , Integer pageSize , Integer pageNo);
 
-    JsonEntity<List<RoomMember>> queryMember(String openid ,Long roomId);
+    JsonEntity<List<RoomMember>> queryMember(User user ,Long roomId);
 
-    JsonEntity<String> operationChatRoom(String openid ,Long byOperationUserId ,Long roomId ,Integer operation);
+    JsonEntity<String> operationChatRoom(User user ,Long byOperationUserId ,Long roomId ,Integer operation);
 
 
-    JsonEntity<LoginUser> getLoginUser(String openid ,Long roomId);
+    JsonEntity<LoginUser> getLoginUser(User user ,Long roomId);
 }

@@ -15,5 +15,5 @@ public interface MessageMapper {
 
     void insertOne(@Param("message") Message message);
 
-    List<Message> findMeeagePage(@Param("roomId") Long roomId ,@Param("pageSize") Integer pageSize ,@Param("pageNo") Integer pageNo);
+    List<Message> findMeeagePage(@Param("roomId") Long roomId ,@Param("start") Integer start ,@Param("pageSize") Integer pageSize);
 }

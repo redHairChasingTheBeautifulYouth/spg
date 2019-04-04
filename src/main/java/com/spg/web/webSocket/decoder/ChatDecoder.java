@@ -24,6 +24,7 @@ public class ChatDecoder implements Decoder.Text<ReceiveChatMessage> {
 
     @Override
     public ReceiveChatMessage decode(String str) {
+        String a = str;
         return JSON.parseObject(str ,ReceiveChatMessage.class);
     }
 

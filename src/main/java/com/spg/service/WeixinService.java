@@ -2,6 +2,7 @@ package com.spg.service;
 
 
 import com.spg.commom.JsonEntity;
+import com.spg.commom.LoginToken;
 
 import java.io.IOException;
 import java.util.Map;
@@ -16,5 +17,5 @@ public interface WeixinService {
      * 根据code获取微信用户基本信息
      * @return
      */
-    JsonEntity<Map<String, Object>> weixinAuth(String code) throws IOException;
+    JsonEntity<LoginToken> weixinAuth(String code) throws IOException;
 }

@@ -19,6 +19,6 @@
         where
         room_id=#{roomId}
         ORDER BY `time` DESC
-        limit (#{pageNo}-1)*#{pageSize},#{pageSize}
+        limit #{start},#{pageSize}
     </select>
 </mapper>

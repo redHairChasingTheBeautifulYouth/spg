@@ -13,6 +13,11 @@ public enum  MessageModelEnum {
     TOKEN_TIME_ERROR("-400" ,"token 过期"),
 
     /**
+     * 还不是房主的好友
+     */
+    NO_AUTH("-2" ,"还不是房主的好友"),
+
+    /**
      * token 错误
      */
     TOKEN_ERROR("-401" ,"token 错误");

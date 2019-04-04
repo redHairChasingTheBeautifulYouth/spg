@@ -24,8 +24,8 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public List<Message> findMeeagePage(Long roomId, Integer pageSize, Integer pageNo) {
-        List<Message> meeagePage = messageMapper.findMeeagePage(roomId, pageSize, pageNo);
+    public List<Message> findMeeagePage(Long roomId, Integer start, Integer pageSize) {
+        List<Message> meeagePage = messageMapper.findMeeagePage(roomId, start, pageSize);
         return meeagePage;
     }
 }

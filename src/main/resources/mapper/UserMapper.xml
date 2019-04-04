@@ -11,8 +11,8 @@
         `user`
         set
         hash=#{user.hash},
-        refresh_token=#{user.refreshToken},
-        access_token=#{user.accessToken}
+        app_name=#{user.appName},
+        app_picture_url=#{user.appPictureUrl}
         where
         openid=#{openid}
     </update>

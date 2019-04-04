@@ -1,21 +1,21 @@
 package com.spg.service.impl;
 
-import com.spg.commom.JsonEntity;
-import com.spg.commom.MessageCodeEnum;
-import com.spg.commom.ResponseHelper;
-import com.spg.commom.WebKeys;
+import com.google.common.collect.Maps;
+import com.spg.commom.*;
 import com.spg.domin.User;
+import com.spg.service.ConfigService;
 import com.spg.service.UserService;
 import com.spg.service.WeixinService;
-import com.spg.util.RandomUtils;
-import com.spg.util.TokenUtil;
-import com.spg.util.WeixinAuthUtils;
+import com.spg.util.*;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author trevor
@@ -28,13 +28,19 @@ public class WeixinServiceImpl implements WeixinService {
     @Resource
     private UserService userService;
 
+    @Value("${weixinimgs.path}")
+    private String weixinimgsPath;
+
+    @Resource
+    private ConfigService configService;
+
     @Override
-    public JsonEntity<Map<String, Object>> weixinAuth(String code) throws IOException {
+    public JsonEntity<LoginToken> weixinAuth(String code) throws IOException {
         //获取access_token
         Map<String, String> accessTokenMap = WeixinAuthUtils.getWeixinToken(code);
         //拉取用户信息
         Map<String, String> userInfoMap = WeixinAuthUtils.getUserInfo(accessTokenMap.get(WebKeys.ACCESS_TOKEN)
-                ,accessTokenMap.get(WebKeys.OPEN_ID));
+                , accessTokenMap.get(WebKeys.OPEN_ID));
         //有可能access token以被使用
         if (userInfoMap.get(WebKeys.ERRCODE) != null) {
             log.error("拉取用户信息 失败啦,快来围观:-----------------" + userInfoMap.get(WebKeys.ERRMSG));
@@ -48,40 +54,53 @@ public class WeixinServiceImpl implements WeixinService {
         if (openid == null) {
             return ResponseHelper.withErrorInstance(MessageCodeEnum.AUTH_FAILED);
         } else {
-            //生成10位hash
-            String hash = RandomUtils.getRandomChars(10);
-            Map<String, Object> claims = TokenUtil.getMap(hash ,openid);
             //判断用户是否存在
             User user = userService.findByOpenid(openid);
+            Map<String,Object> claims = Maps.newHashMap();
             if (user == null) {
+                //保存用户头像
+                String imgUrl = userInfoMap.get("headimgurl");
+                String pictureName = RandomUtils.getRandomChars(30) + ".jpg";
+                HttpUtil.saveWeixinimg(imgUrl ,weixinimgsPath ,pictureName);
                 //新增
-                userService.insertOne(generateUser(hash ,userInfoMap ,accessTokenMap));
+                String hash = RandomUtils.getRandomChars(10);
+                user = new User();
+                user.setOpenid(openid);
+                user.setHash(hash);
+                user.setAppName(userInfoMap.get("nickname"));
+                user.setAppPictureUrl(configService.findDomainNamesCanUse().get(0).getDomainName()+ "/" + weixinimgsPath + pictureName);
+                userService.insertOne(user);
+
+                claims.put("openid" ,user.getOpenid());
+                claims.put("hash" ,user.getHash());
+                claims.put("timestamp" ,System.currentTimeMillis() + 15L * 1000 * 60 * 60 * 24);
             } else {
-                //更新hash、accessToken、refreshToken
-                User user1 = new User();
-                user1.setOpenid(openid);
-                user1.setHash(hash);
-                user1.setAccessToken(accessTokenMap.get(WebKeys.ACCESS_TOKEN));
-                user1.setRefreshToken(accessTokenMap.get(WebKeys.REFRESH_TOKEN));
-                userService.updateUser(user1);
+                // todo 删除旧的头像
+                //保存用户头像
+                String imgUrl = userInfoMap.get("headimgurl");
+                String pictureName = RandomUtils.getRandomChars(30) + ".jpg";
+                HttpUtil.saveWeixinimg(imgUrl ,weixinimgsPath ,pictureName);
+                //更新头像，昵称，hash
+                user.setAppName(userInfoMap.get("nickname"));
+                String hash = RandomUtils.getRandomChars(10);
+                user.setHash(hash);
+                user.setAppPictureUrl(configService.findDomainNamesCanUse().get(0).getDomainName()+ "/" + weixinimgsPath + pictureName);
+                userService.updateUser(user);
+
+                claims.put("openid" ,user.getOpenid());
+                claims.put("hash" ,user.getHash());
+                claims.put("timestamp" ,System.currentTimeMillis());
             }
-            return ResponseHelper.createInstance(claims ,MessageCodeEnum.AUTH_SUCCESS);
+
+            String token = TokenUtil.generateToken(claims);
+            claims.put("timestamp" ,System.currentTimeMillis() + 45L * 1000 * 60 * 60 * 24);
+            String refreshToken = TokenUtil.generateToken(claims);
+            LoginToken loginToken = new LoginToken();
+            loginToken.setRefreshToken(refreshToken);
+            loginToken.setToken(token);
+            loginToken.setTokenPeriodTime(System.currentTimeMillis() + 30L * 1000 * 60 * 60 * 24);
+            return ResponseHelper.createInstance(loginToken, MessageCodeEnum.AUTH_SUCCESS);
         }
     }
 
-    /**
-     * 生成一个user
-     * @return
-     */
-    private User generateUser(String hash ,Map<String, String> userInfoMap ,Map<String, String> accessTokenMap){
-        User user = new User();
-        user.setOpenid(userInfoMap.get("openid"));
-        user.setAppName(userInfoMap.get("nickname"));
-        //用户头像，最后一个数值代表正方形头像大小（有0、46、64、96、132数值可选，0代表640*640正方形头像），用户没有头像时该项为空
-        user.setAppPictureUrl(userInfoMap.get("headimgurl"));
-        user.setHash(hash);
-        user.setAccessToken(accessTokenMap.get(WebKeys.ACCESS_TOKEN));
-        user.setRefreshToken(accessTokenMap.get(WebKeys.REFRESH_TOKEN));
-        return user;
-    }
 }

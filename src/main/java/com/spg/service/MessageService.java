@@ -12,5 +12,5 @@ public interface MessageService {
 
     void generateMessage(Message message);
 
-    List<Message> findMeeagePage(Long roomId ,Integer pageSize ,Integer pageNo);
+    List<Message> findMeeagePage(Long roomId ,Integer start ,Integer pageSize);
 }

@@ -1,8 +1,10 @@
 package com.spg.web.interceptor;
 
 import com.spg.commom.WebKeys;
+import com.spg.domin.User;
 import com.spg.service.UserService;
 import com.spg.util.SessionUtil;
+import com.spg.util.ThreadLocalUtil;
 import com.spg.util.TokenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -12,6 +14,7 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.awt.*;
 import java.util.Map;
 import java.util.Objects;
 
@@ -40,43 +43,41 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
 //        }
         //从什么页面进来
         String reUrl = request.getRequestURI();
-        //获取token
 
         String token = request.getHeader(WebKeys.TOKEN);
         if (token == null) {
             response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
             return false;
         }
-        //session token
-        String sessionToken = (String) SessionUtil.getSession().getAttribute("token");
-        if (sessionToken == null) {
-            response.sendRedirect("/front/weixin/login/refresh");
-            return false;
-        }
-        if (!Objects.equals(token ,sessionToken)) {
-            response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
-            return false;
-        }
         try {
             //解析token
             Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
-            String openid = (String) claims.get(WebKeys.OPEN_ID);
+            String openid = (String) claims.get("openid");
             String hash = (String) claims.get("hash");
-            String timestamp = (String) claims.get("timestamp");
+            Long timestamp = (Long) claims.get("timestamp");
 
             //三者必须存在,少一样说明token被篡改
             if (openid == null || hash == null || timestamp == null) {
                 response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
                 return false;
             }
-            //合法才通过
-            if(!(userService.checkOpenidAndHash(openid,hash))){
+            //token是否已过期
+            if (System.currentTimeMillis() > Long.valueOf(timestamp)) {
                 response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
                 return false;
             }
-            return Boolean.TRUE;
+            //合法才通过
+            User user = userService.findByOpenid(openid);
+            if (user != null && Objects.equals(hash ,user.getHash())) {
+                ThreadLocalUtil.getInstance().bind(userService.findByOpenid(openid));
+                return Boolean.TRUE;
+            }else {
+                response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
+                return false;
+            }
         } catch (Exception e) {
             //token非法
+            log.error(e.toString());
             response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
             return false;
         }

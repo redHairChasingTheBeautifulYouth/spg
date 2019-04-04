@@ -1,9 +1,12 @@
 package com.spg.web.webSocket;
 
+import com.google.common.collect.ImmutableList;
 import com.spg.commom.*;
 import com.spg.domin.Message;
 import com.spg.domin.User;
+import com.spg.domin.UserRoom;
 import com.spg.service.MessageService;
+import com.spg.service.UserRoomService;
 import com.spg.service.UserService;
 import com.spg.util.TokenUtil;
 import com.spg.web.webSocket.bo.MessageModelEnum;
@@ -11,6 +14,7 @@ import com.spg.web.webSocket.config.ChatServerConfigurator;
 import com.spg.web.webSocket.decoder.ChatDecoder;
 import com.spg.web.webSocket.encoder.ChatEncoder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -40,11 +44,29 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Slf4j
 public class ChatServer {
 
-    @Resource
-    private UserService userService;
+    private final static ImmutableList<Integer> ROOM_MEMBER_AUTH = ImmutableList.of(1,2,3);
+
+
+    private static UserService userService;
 
     @Resource
-    private MessageService messageService;
+    public void setUserService(UserService userService) {
+        ChatServer.userService = userService;
+    }
+
+    private static MessageService messageService;
+
+    @Resource
+    public void setMessageService(MessageService messageService) {
+        ChatServer.messageService = messageService;
+    }
+
+    private static UserRoomService userRoomService;
+
+    @Resource
+    public void setUserRoomService(UserRoomService userRoomService) {
+        ChatServer.userRoomService = userRoomService;
+    }
 
     private Session mySession;
 
@@ -55,10 +77,11 @@ public class ChatServer {
     private ConcurrentHashMap<String ,CopyOnWriteArrayList<Session>> sessionUsers;
 
     @OnOpen
-    public void startChatChannel(@PathParam("chatRoomId") String roomId  ,EndpointConfig config ,Session session) throws IOException{
+    public void startChatChannel(@PathParam("chatRoomId") String roomId  ,EndpointConfig config ,Session session) throws IOException, EncodeException {
         this.mySession = session;
         String token = session.getRequestParameterMap().get(WebKeys.TOKEN).get(0);
         if (token == null) {
+            log.info("有人瞎鸡巴占用老子的连接数，时间是：" + System.currentTimeMillis());
             this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
             return;
         }
@@ -66,19 +89,39 @@ public class ChatServer {
         Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
         String openid = (String) claims.get(WebKeys.OPEN_ID);
         String hash = (String) claims.get("hash");
-        String timestamp = (String) claims.get("timestamp");
+        Long timestamp = (Long) claims.get("timestamp");
         //三者必须存在,少一样说明token被篡改
-        if (openid == null || hash == null) {
+        if (openid == null || hash == null || timestamp == null) {
+            log.info("有人想黑爸爸，时间是：" + System.currentTimeMillis());
             this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
             return;
         }
         //token是否合法
-        if(!(userService.checkOpenidAndHash(openid,hash))){
+        User user = userService.findByOpenid(openid);
+        if(user == null || !Objects.equals(user.getHash() ,hash)){
+            log.info("有人想黑爸爸，时间是：" + System.currentTimeMillis());
             this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
             return;
         }
+        //token是否已过期
+        if (System.currentTimeMillis() > Long.valueOf(timestamp)) {
+            ReturnChatMessage returnChatMessage = new ReturnChatMessage();
+            returnChatMessage.setMessageType(-1);
+            returnChatMessage.setMessage(MessageModelEnum.TOKEN_TIME_ERROR.getDesc());
+            this.mySession.getBasicRemote().sendObject(returnChatMessage);
+            this.mySession.close();
+            return;
+        }
         //发起链接的用户是否是该房间的人
-        User user = userService.findByOpenid(openid);
+        UserRoom userRoom = userRoomService.findByRoomIdAndUserId(Long.valueOf(roomId) ,user.getId());
+        if (userRoom == null || !ROOM_MEMBER_AUTH.contains(userRoom.getRoleType())) {
+            ReturnChatMessage returnChatMessage = new ReturnChatMessage();
+            returnChatMessage.setMessageType(-2);
+            returnChatMessage.setMessage(MessageModelEnum.NO_AUTH.getDesc());
+            this.mySession.getBasicRemote().sendObject(returnChatMessage);
+            this.mySession.close();
+            return;
+        }
         this.mySession.getUserProperties().put("user" ,user);
         this.endpointConfig = (ServerEndpointConfig) config;
         ChatServerConfigurator csc = (ChatServerConfigurator) endpointConfig.getConfigurator();
@@ -101,6 +144,7 @@ public class ChatServer {
 
     @OnError
     public void myError(Throwable t){
+        System.out.println("--------------------"+t.toString());
         log.error(t.toString());
     }
 
@@ -117,7 +161,6 @@ public class ChatServer {
             }
         }
     }
-
 
     /**
      * 聊天加入新的用户

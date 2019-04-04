@@ -2,6 +2,7 @@ package com.spg.web.controller;
 
 
 import com.spg.commom.*;
+import com.spg.service.WeixinService;
 import com.spg.util.RandomUtils;
 import com.spg.util.SessionUtil;
 import io.swagger.annotations.Api;
@@ -36,13 +37,10 @@ public class WeixinLoginController{
     private HttpServletResponse response;
 
     @Resource
+    private WeixinService weixinService;
+
+    @Resource
     private ConcurrentHashMap<String ,Object> concurrentHashMap;
-
-    @ApiOperation("token过期后,使用refresh_token重新获取微信token,获取用户信息，若refresh_token过期须重新授权")
-    @RequestMapping(value = "/front/weixin/login/refresh", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public void refresh() throws ServletException, IOException {
-
-    }
 
     @ApiOperation("微信登录并转发到微信登录页面")
     @RequestMapping(value = "/front/weixin/login/forward", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -50,23 +48,21 @@ public class WeixinLoginController{
         //用户临时凭证
         String uuid = RandomUtils.getRandomChars(40);
         //使用全局变量，微信授权成功后改变值
-        TempUser tempUser = new TempUser(AuthEnum.NOT_AUTH.getCode() ,"");
-        concurrentHashMap.put(uuid ,tempUser);
+        concurrentHashMap.put(uuid ,uuid);
         request.getRequestDispatcher("/weixinlogin.html?uuid=" + uuid + "&reUrl=" + request.getParameter("reUrl")).forward(request,response);
     }
 
-    @ApiOperation("检查微信是否授权")
-    @RequestMapping(value = "/front/weixin/login/check", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public JsonEntity<String> checkAuth(@RequestParam("uuid") String uuid)  {
-        //判断微信是否已经授权
-        TempUser tempUser = (TempUser) concurrentHashMap.get(uuid);
-        String token = tempUser.getToken();
-        String isAuth = tempUser.getIsAuth();
+    @ApiOperation("根据code码请求用户信息")
+    @RequestMapping(value = "/front/weixin/login/get", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public JsonEntity<LoginToken> checkAuth(@RequestParam("uuid") String uuid ,@RequestParam("code") String code) throws IOException {
+        if (concurrentHashMap.get(uuid) == null) {
+            return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.ERROR_NUM_MAX);
+        }
+        JsonEntity<LoginToken> jsonEntity = weixinService.weixinAuth(code);
         //授权成功
-        if(AuthEnum.IS_AUTH.getCode().equals(isAuth)){
+        if(jsonEntity.getCode() > 0){
             concurrentHashMap.remove(uuid);
-            SessionUtil.getSession().setAttribute("token" ,token);
-            return ResponseHelper.createInstance(token ,MessageCodeEnum.AUTH_SUCCESS);
+            return jsonEntity;
         }else {
             return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.AUTH_FAILED);
         }

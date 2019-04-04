@@ -1,8 +1,10 @@
 package com.spg.web.controller;
 
+import com.google.common.collect.Maps;
 import com.spg.commom.*;
 import com.spg.domin.User;
 import com.spg.service.BizService;
+import com.spg.util.ThreadLocalUtil;
 import com.spg.util.TokenUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -40,16 +42,34 @@ public class BizController {
 
     @ApiOperation(value = "得到一个新的token")
     @RequestMapping(value = "/get/token", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public JsonEntity<String> getToken(){
-        Map<String,Object> claims =  TokenUtil.getClaimsFromToken(request.getHeader("token"));
-        claims.put("timestamp" ,System.currentTimeMillis());
-        return ResponseHelper.createInstance(TokenUtil.generateToken(claims) , MessageCodeEnum.CREATE_SUCCESS);
+    public JsonEntity<LoginToken> getToken(){
+        User user = ThreadLocalUtil.getInstance().getUserInfo();
+        Map<String,Object> claims = Maps.newHashMap();
+
+        claims.put("openid" ,user.getOpenid());
+        claims.put("hash" ,user.getHash());
+        claims.put("timestamp" ,System.currentTimeMillis() + 15L * 1000 * 60 * 60 * 24);
+        String token = TokenUtil.generateToken(claims);
+
+        claims.put("timestamp" ,System.currentTimeMillis() + 45L * 1000 * 60 * 60 * 24);
+        String refreshToken = TokenUtil.generateToken(claims);
+
+        LoginToken loginToken = new LoginToken();
+        loginToken.setToken(token);
+        loginToken.setRefreshToken(refreshToken);
+        loginToken.setTokenPeriodTime(30L * 1000 * 60 * 60 * 24);
+
+        ThreadLocalUtil.getInstance().remove();
+        return ResponseHelper.createInstance(loginToken ,MessageCodeEnum.CREATE_SUCCESS);
     }
 
     @ApiOperation(value = "查询得到本房间的登陆用户信息,role为1房主，2管理员，3普通成员")
     @RequestMapping(value = "/login/user/{roomId}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<LoginUser> getLoginUser(@PathVariable("roomId") Long roomId){
-        return bizService.getLoginUser(getOpenid() ,roomId);
+        User user = ThreadLocalUtil.getInstance().getUserInfo();
+        JsonEntity<LoginUser> jsonEntity = bizService.getLoginUser(user ,roomId);
+        ThreadLocalUtil.getInstance().remove();
+        return jsonEntity;
     }
 
     @ApiOperation(value = "用于转发到聊天室")
@@ -61,25 +81,37 @@ public class BizController {
     @ApiOperation(value = "进入房间，检查用户是否是第一个进入的，若是则成为房主，若不是则检查是否是房主的好友")
     @RequestMapping(value = "/enter/{roomId}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<String> enterRoom(@PathVariable("roomId") Long roomId){
-        return bizService.enterRoom(roomId ,getOpenid());
+        User user = ThreadLocalUtil.getInstance().getUserInfo();
+        JsonEntity<String> jsonEntity = bizService.enterRoom(roomId ,user);
+        ThreadLocalUtil.getInstance().remove();
+        return jsonEntity;
     }
 
     @ApiOperation(value = "申请成为房主的好友")
     @RequestMapping(value = "/apply/{roomId}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<String> applyRnterRoom(@PathVariable("roomId") Long roomId){
-        return bizService.applyRnterRoom(roomId ,getOpenid());
+        User user = ThreadLocalUtil.getInstance().getUserInfo();
+        JsonEntity<String> jsonEntity = bizService.applyRnterRoom(roomId ,user);
+        ThreadLocalUtil.getInstance().remove();
+        return jsonEntity;
     }
 
     @ApiOperation(value = "查询聊天记录")
     @RequestMapping(value = "/chat/record/{roomId}/{pageSize}/{pageNo}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<List<ReturnChatMessage>> chatRecord(@PathVariable("roomId") Long roomId , @PathVariable("pageSize") Integer pageSize , @PathVariable("pageNo") Integer pageNo){
-        return bizService.chatRecord(getOpenid() ,roomId ,pageSize ,pageNo);
+        User user = ThreadLocalUtil.getInstance().getUserInfo();
+        JsonEntity<List<ReturnChatMessage>> jsonEntity = bizService.chatRecord(user ,roomId ,pageSize ,pageNo);
+        ThreadLocalUtil.getInstance().remove();
+        return jsonEntity;
     }
 
     @ApiOperation(value = "查询群成员,普通成员查询已经通过申请的，管理员和房主查询已申请通过的、正在申请的、拒绝的。status为1房主，2管理员，3普通成员，4正在申请的，5拒绝的")
     @RequestMapping(value = "/chat/room/{roomId}/member", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public JsonEntity<List<RoomMember>> qyeryMember(@PathVariable("roomId") Long roomId){
-        return bizService.queryMember(getOpenid() ,roomId);
+        User user = ThreadLocalUtil.getInstance().getUserInfo();
+        JsonEntity<List<RoomMember>> jsonEntity = bizService.queryMember(user ,roomId);
+        ThreadLocalUtil.getInstance().remove();
+        return jsonEntity;
     }
 
     @ApiOperation(value = "通过好友申请、拒绝好友申请、将普通好友变管理员、取消管理员身份变成普通好友、将普通好友踢出，operation码分别是1，2，3，4，5")
@@ -87,16 +119,9 @@ public class BizController {
     public JsonEntity<String> operationChatRoom(@PathVariable("roomId") Long roomId,
                                                 @PathVariable("byOperationUserId") Long byOperationUserId,
                                                 @PathVariable("operation") Integer operation){
-        return bizService.operationChatRoom(getOpenid() ,byOperationUserId ,roomId ,operation);
+        User user = ThreadLocalUtil.getInstance().getUserInfo();
+        JsonEntity<String> jsonEntity = bizService.operationChatRoom(user ,byOperationUserId ,roomId ,operation);
+        return jsonEntity;
     }
-
-    private String getOpenid(){
-        String token = request.getHeader("token");
-        Map<String, Object> claims = TokenUtil.getClaimsFromToken(token);
-        String openid = (String) claims.get(WebKeys.OPEN_ID);
-        return openid;
-    }
-
-
 
 }
