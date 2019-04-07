@@ -31,34 +31,27 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WeixinLoginController{
 
     @Resource
-    private HttpServletRequest request;
-
-    @Resource
-    private HttpServletResponse response;
-
-    @Resource
     private WeixinService weixinService;
 
     @Resource
     private ConcurrentHashMap<String ,Object> concurrentHashMap;
 
-    @ApiOperation("微信登录并转发到微信登录页面")
+    @ApiOperation("得到用户临时凭证uuid")
     @RequestMapping(value = "/front/weixin/login/forward", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public void weixinForward() throws ServletException, IOException {
+    public JsonEntity<String> weixinForward()  {
         //用户临时凭证
         String uuid = RandomUtils.getRandomChars(40);
-        //使用全局变量，微信授权成功后改变值
-        concurrentHashMap.put(uuid ,uuid);
-        request.getRequestDispatcher("/weixinlogin.html?uuid=" + uuid + "&reUrl=" + request.getParameter("reUrl")).forward(request,response);
+        concurrentHashMap.put(uuid ,System.currentTimeMillis());
+        return ResponseHelper.createInstance(uuid ,MessageCodeEnum.CREATE_SUCCESS);
     }
 
     @ApiOperation("根据code码请求用户信息")
     @RequestMapping(value = "/front/weixin/login/get", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public JsonEntity<LoginToken> checkAuth(@RequestParam("uuid") String uuid ,@RequestParam("code") String code) throws IOException {
+    public JsonEntity<String> checkAuth(@RequestParam("uuid") String uuid ,@RequestParam("code") String code) throws IOException {
         if (concurrentHashMap.get(uuid) == null) {
             return ResponseHelper.createInstanceWithOutData(MessageCodeEnum.ERROR_NUM_MAX);
         }
-        JsonEntity<LoginToken> jsonEntity = weixinService.weixinAuth(code);
+        JsonEntity<String> jsonEntity = weixinService.weixinAuth(code);
         //授权成功
         if(jsonEntity.getCode() > 0){
             concurrentHashMap.remove(uuid);

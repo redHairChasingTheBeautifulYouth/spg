@@ -9,7 +9,7 @@
     <select id="findMeeagePage" resultType="com.spg.domin.Message">
         select
         user_id userId,
-        app_name userNmae,
+        app_name appName,
         picture_url pictureUrl,
         time time,
         message_type messageType,

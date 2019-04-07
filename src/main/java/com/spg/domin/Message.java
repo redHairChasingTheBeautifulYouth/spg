@@ -37,6 +37,10 @@ public class Message {
      */
     private String message;
 
+    public Message(){
+
+    }
+
     public Message (ChatMessage chatMessage ,String roomId){
         this.userId = chatMessage.getUserId();
         this.roomId = Long.valueOf(roomId);

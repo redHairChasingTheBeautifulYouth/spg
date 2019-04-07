@@ -30,23 +30,14 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
     @Resource
     private UserService userService;
 
+    private final static String redirectUrl = "www.knave.top/wechat/";
+
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 取得客户端浏览器的类型
-        String browserType = request.getHeader("user-agent").toLowerCase();
-        //校验浏览器
-//        if (StringUtils.isEmpty(browserType) || !browserType.contains(WebKeys.WEIXIN_BROWSER)) {
-//            log.info("浏览器类型不匹配，重定向到error页面");
-//            response.sendRedirect("/error.html");
-//            return false;
-//        }
-        //从什么页面进来
-        String reUrl = request.getRequestURI();
-
         String token = request.getHeader(WebKeys.TOKEN);
         if (token == null) {
-            response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
+            response.sendRedirect(redirectUrl);
             return false;
         }
         try {
@@ -58,12 +49,7 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
 
             //三者必须存在,少一样说明token被篡改
             if (openid == null || hash == null || timestamp == null) {
-                response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
-                return false;
-            }
-            //token是否已过期
-            if (System.currentTimeMillis() > Long.valueOf(timestamp)) {
-                response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
+                response.sendRedirect(redirectUrl);
                 return false;
             }
             //合法才通过
@@ -72,13 +58,13 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
                 ThreadLocalUtil.getInstance().bind(userService.findByOpenid(openid));
                 return Boolean.TRUE;
             }else {
-                response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
+                response.sendRedirect(redirectUrl);
                 return false;
             }
         } catch (Exception e) {
             //token非法
             log.error(e.toString());
-            response.sendRedirect("/front/weixin/login?reUrl=" + reUrl);
+            response.sendRedirect(redirectUrl);
             return false;
         }
     }

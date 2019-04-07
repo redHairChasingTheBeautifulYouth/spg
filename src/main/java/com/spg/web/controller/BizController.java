@@ -1,11 +1,12 @@
 package com.spg.web.controller;
 
-import com.google.common.collect.Maps;
-import com.spg.commom.*;
+import com.spg.commom.JsonEntity;
+import com.spg.commom.LoginUser;
+import com.spg.commom.ReturnChatMessage;
+import com.spg.commom.RoomMember;
 import com.spg.domin.User;
 import com.spg.service.BizService;
 import com.spg.util.ThreadLocalUtil;
-import com.spg.util.TokenUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
@@ -20,7 +21,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @Auther: trevor
@@ -32,36 +32,7 @@ import java.util.Map;
 public class BizController {
 
     @Resource
-    private HttpServletRequest request;
-
-    @Resource
-    private HttpServletResponse response;
-
-    @Resource
     private BizService bizService;
-
-    @ApiOperation(value = "得到一个新的token")
-    @RequestMapping(value = "/get/token", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public JsonEntity<LoginToken> getToken(){
-        User user = ThreadLocalUtil.getInstance().getUserInfo();
-        Map<String,Object> claims = Maps.newHashMap();
-
-        claims.put("openid" ,user.getOpenid());
-        claims.put("hash" ,user.getHash());
-        claims.put("timestamp" ,System.currentTimeMillis() + 15L * 1000 * 60 * 60 * 24);
-        String token = TokenUtil.generateToken(claims);
-
-        claims.put("timestamp" ,System.currentTimeMillis() + 45L * 1000 * 60 * 60 * 24);
-        String refreshToken = TokenUtil.generateToken(claims);
-
-        LoginToken loginToken = new LoginToken();
-        loginToken.setToken(token);
-        loginToken.setRefreshToken(refreshToken);
-        loginToken.setTokenPeriodTime(30L * 1000 * 60 * 60 * 24);
-
-        ThreadLocalUtil.getInstance().remove();
-        return ResponseHelper.createInstance(loginToken ,MessageCodeEnum.CREATE_SUCCESS);
-    }
 
     @ApiOperation(value = "查询得到本房间的登陆用户信息,role为1房主，2管理员，3普通成员")
     @RequestMapping(value = "/login/user/{roomId}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -70,12 +41,6 @@ public class BizController {
         JsonEntity<LoginUser> jsonEntity = bizService.getLoginUser(user ,roomId);
         ThreadLocalUtil.getInstance().remove();
         return jsonEntity;
-    }
-
-    @ApiOperation(value = "用于转发到聊天室")
-    @RequestMapping(value = "/forward/{roomId}", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public void forwardChatRoom(@PathVariable("roomId") Long roomId) throws ServletException, IOException {
-        request.getRequestDispatcher("/chat.html?roomId=" + roomId).forward(request,response);
     }
 
     @ApiOperation(value = "进入房间，检查用户是否是第一个进入的，若是则成为房主，若不是则检查是否是房主的好友")
@@ -121,6 +86,7 @@ public class BizController {
                                                 @PathVariable("operation") Integer operation){
         User user = ThreadLocalUtil.getInstance().getUserInfo();
         JsonEntity<String> jsonEntity = bizService.operationChatRoom(user ,byOperationUserId ,roomId ,operation);
+        ThreadLocalUtil.getInstance().remove();
         return jsonEntity;
     }
 

@@ -31,11 +31,9 @@ public class WeixinServiceImpl implements WeixinService {
     @Value("${weixinimgs.path}")
     private String weixinimgsPath;
 
-    @Resource
-    private ConfigService configService;
 
     @Override
-    public JsonEntity<LoginToken> weixinAuth(String code) throws IOException {
+    public JsonEntity<String> weixinAuth(String code) throws IOException {
         //获取access_token
         Map<String, String> accessTokenMap = WeixinAuthUtils.getWeixinToken(code);
         //拉取用户信息
@@ -60,31 +58,24 @@ public class WeixinServiceImpl implements WeixinService {
             if (user == null) {
                 //保存用户头像
                 String imgUrl = userInfoMap.get("headimgurl");
-                String pictureName = RandomUtils.getRandomChars(30) + ".jpg";
-                HttpUtil.saveWeixinimg(imgUrl ,weixinimgsPath ,pictureName);
                 //新增
                 String hash = RandomUtils.getRandomChars(10);
                 user = new User();
                 user.setOpenid(openid);
                 user.setHash(hash);
                 user.setAppName(userInfoMap.get("nickname"));
-                user.setAppPictureUrl(configService.findDomainNamesCanUse().get(0).getDomainName()+ "/" + weixinimgsPath + pictureName);
+                user.setAppPictureUrl(userInfoMap.get("headimgurl"));
                 userService.insertOne(user);
 
                 claims.put("openid" ,user.getOpenid());
                 claims.put("hash" ,user.getHash());
-                claims.put("timestamp" ,System.currentTimeMillis() + 15L * 1000 * 60 * 60 * 24);
+                claims.put("timestamp" ,System.currentTimeMillis());
             } else {
-                // todo 删除旧的头像
-                //保存用户头像
-                String imgUrl = userInfoMap.get("headimgurl");
-                String pictureName = RandomUtils.getRandomChars(30) + ".jpg";
-                HttpUtil.saveWeixinimg(imgUrl ,weixinimgsPath ,pictureName);
                 //更新头像，昵称，hash
                 user.setAppName(userInfoMap.get("nickname"));
                 String hash = RandomUtils.getRandomChars(10);
                 user.setHash(hash);
-                user.setAppPictureUrl(configService.findDomainNamesCanUse().get(0).getDomainName()+ "/" + weixinimgsPath + pictureName);
+                user.setAppPictureUrl(userInfoMap.get("headimgurl"));
                 userService.updateUser(user);
 
                 claims.put("openid" ,user.getOpenid());
@@ -93,13 +84,7 @@ public class WeixinServiceImpl implements WeixinService {
             }
 
             String token = TokenUtil.generateToken(claims);
-            claims.put("timestamp" ,System.currentTimeMillis() + 45L * 1000 * 60 * 60 * 24);
-            String refreshToken = TokenUtil.generateToken(claims);
-            LoginToken loginToken = new LoginToken();
-            loginToken.setRefreshToken(refreshToken);
-            loginToken.setToken(token);
-            loginToken.setTokenPeriodTime(System.currentTimeMillis() + 30L * 1000 * 60 * 60 * 24);
-            return ResponseHelper.createInstance(loginToken, MessageCodeEnum.AUTH_SUCCESS);
+            return ResponseHelper.createInstance(token, MessageCodeEnum.AUTH_SUCCESS);
         }
     }
 

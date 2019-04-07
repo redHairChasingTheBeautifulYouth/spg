@@ -103,15 +103,6 @@ public class ChatServer {
             this.mySession.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE ,MessageModelEnum.TOKEN_ERROR.getCode()));
             return;
         }
-        //token是否已过期
-        if (System.currentTimeMillis() > Long.valueOf(timestamp)) {
-            ReturnChatMessage returnChatMessage = new ReturnChatMessage();
-            returnChatMessage.setMessageType(-1);
-            returnChatMessage.setMessage(MessageModelEnum.TOKEN_TIME_ERROR.getDesc());
-            this.mySession.getBasicRemote().sendObject(returnChatMessage);
-            this.mySession.close();
-            return;
-        }
         //发起链接的用户是否是该房间的人
         UserRoom userRoom = userRoomService.findByRoomIdAndUserId(Long.valueOf(roomId) ,user.getId());
         if (userRoom == null || !ROOM_MEMBER_AUTH.contains(userRoom.getRoleType())) {

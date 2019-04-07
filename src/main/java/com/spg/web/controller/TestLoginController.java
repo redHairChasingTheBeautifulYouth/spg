@@ -40,7 +40,7 @@ public class TestLoginController {
 
     @ApiOperation("只需点一下就可以登录了，转到/api/login/user获取用户信息")
     @RequestMapping(value = "/api/testLogin/login", method = {RequestMethod.GET}, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public JsonEntity<LoginToken> weixinAuth(HttpServletRequest request, HttpServletResponse response){
+    public JsonEntity<String> weixinAuth(){
         String openid = System.currentTimeMillis() + "";
         String hash = RandomUtils.getRandomChars(20);
 
@@ -55,17 +55,9 @@ public class TestLoginController {
         Map<String, Object> claims = Maps.newHashMap();
         claims.put("openid" ,openid);
         claims.put("hash" ,hash);
-        claims.put("timestamp" ,System.currentTimeMillis() + System.currentTimeMillis() + 15L * 1000 * 60 * 60 * 24);
+        claims.put("timestamp" ,System.currentTimeMillis());
         String token = TokenUtil.generateToken(claims);
 
-        claims.put("timestamp" ,System.currentTimeMillis() + 45L * 1000 * 60 * 60 * 24);
-        String refreshToken = TokenUtil.generateToken(claims);
-
-        LoginToken loginToken = new LoginToken();
-        loginToken.setToken(token);
-        loginToken.setRefreshToken(refreshToken);
-        loginToken.setTokenPeriodTime(System.currentTimeMillis() + 30L * 1000 * 60 * 60 * 24);
-
-        return ResponseHelper.createInstance(loginToken ,MessageCodeEnum.AUTH_SUCCESS);
+        return ResponseHelper.createInstance(token ,MessageCodeEnum.AUTH_SUCCESS);
     }
 }
