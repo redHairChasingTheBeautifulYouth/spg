@@ -127,6 +127,13 @@ public class ChatServer {
         ChatServerConfigurator csc = (ChatServerConfigurator) endpointConfig.getConfigurator();
         this.chatMessageMap = csc.getMessages();
         this.sessionUsers = csc.getSessions();
+        if (sessionUsers.get(roomId) == null) {
+            CopyOnWriteArrayList<Session> sessions = new CopyOnWriteArrayList<>();
+            sessionUsers.put(roomId ,sessions);
+            CopyOnWriteArrayList<ChatMessage> chatMessages = new CopyOnWriteArrayList<>();
+            chatMessageMap.put(roomId ,chatMessages);
+        }
+        log.info("用户链接，用户id:"+user.getId());
     }
 
     @OnMessage
@@ -152,11 +159,16 @@ public class ChatServer {
     public void endChatChannel(@PathParam("chatRoomId") String roomId){
         //关闭链接时移除聊天用户
         CopyOnWriteArrayList<Session> sessions = this.sessionUsers.get(roomId);
+        if (sessions == null) {
+            return;
+        }
         Iterator<Session> itrSession = sessions.iterator();
         while (itrSession.hasNext()) {
             Session targetSession = itrSession.next();
             if (targetSession.equals(this.mySession)) {
-                itrSession.remove();
+                User user = (User)targetSession.getUserProperties().get("user");
+                log.info("用户断开，用户id:"+user.getId());
+                sessions.remove(targetSession);
                 break;
             }
         }
@@ -167,10 +179,9 @@ public class ChatServer {
      */
     private void addNewUser(String roomId){
         CopyOnWriteArrayList<Session> sessions = this.sessionUsers.get(roomId);
-        if (sessions == null) {
-            CopyOnWriteArrayList<Session> newSessions = new CopyOnWriteArrayList<>();
+        if (!sessions.contains(mySession)) {
+            sessions.add(mySession);
         }
-        sessions.add(mySession);
     }
 
     /**
@@ -210,8 +221,8 @@ public class ChatServer {
      * 保存聊天记录
      * @param chatMessage
      */
-    private void saveChatMessage(ChatMessage chatMessage ,String roomId){
-        Message message = new Message(chatMessage ,roomId);
+    private void saveChatMessage(ChatMessage chatMessage ,String roomId) {
+        Message message = new Message(chatMessage, roomId);
         messageService.generateMessage(message);
     }
 
