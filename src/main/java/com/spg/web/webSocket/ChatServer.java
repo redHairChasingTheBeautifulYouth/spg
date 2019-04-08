@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 
 /**
  * @Auther: trevor
@@ -52,6 +53,13 @@ public class ChatServer {
     @Resource
     public void setUserService(UserService userService) {
         ChatServer.userService = userService;
+    }
+
+    private static Executor executor;
+
+    @Resource(name = "saveMessageExecutor")
+    public void setExecutor(Executor executor) {
+        ChatServer.executor = executor;
     }
 
     private static MessageService messageService;
@@ -137,7 +145,8 @@ public class ChatServer {
         this.addMessage(roomId ,chatMessage);
         this.broadcastMessage(roomId ,new ReturnChatMessage(0 ,chatMessage));
         this.sendMessageToMyself(new ReturnChatMessage(1 ,chatMessage));
-        this.saveChatMessage(chatMessage ,roomId);
+        executor.execute(() -> this.saveChatMessage(chatMessage ,roomId));
+        //this.saveChatMessage(chatMessage ,roomId);
     }
 
     @OnError
