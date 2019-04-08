@@ -10,7 +10,7 @@ import lombok.Data;
 public class ReceiveChatMessage {
 
     /**
-     * 消息类型，1为加入新的聊天用户，2为聊天内容，3为图片
+     * 消息类型，1为聊天内容，2为图片
      */
     private Integer messageType;
 

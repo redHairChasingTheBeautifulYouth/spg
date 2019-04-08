@@ -70,12 +70,12 @@ public class WebKeys {
     /**
      * 微信appId
      */
-    public static final String WEIXIN_APPID = "";
+    public static final String WEIXIN_APPID = "wxc12ddbdc963b4dff";
 
     /**
      * 微信APP_SECRET
      */
-    public static final String WEIXIN_APP_SECRET = "";
+    public static final String WEIXIN_APP_SECRET = "aaaae2bb6a42f3daced25ffae6a1e0a9";
 
     /**
      * 闲聊appId

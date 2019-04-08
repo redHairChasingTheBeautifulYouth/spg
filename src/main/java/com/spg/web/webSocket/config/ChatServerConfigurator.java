@@ -31,7 +31,6 @@ public class ChatServerConfigurator extends ServerEndpointConfig.Configurator {
      */
     @Override
     public void modifyHandshake(ServerEndpointConfig sec , HandshakeRequest request , HandshakeResponse response){
-        HttpSession httpSession=(HttpSession) request.getHttpSession();
 
     }
 }
