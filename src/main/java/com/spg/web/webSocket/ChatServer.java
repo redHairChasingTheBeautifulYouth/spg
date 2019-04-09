@@ -1,7 +1,10 @@
 package com.spg.web.webSocket;
 
 import com.google.common.collect.ImmutableList;
-import com.spg.commom.*;
+import com.spg.commom.ChatMessage;
+import com.spg.commom.ReceiveChatMessage;
+import com.spg.commom.ReturnChatMessage;
+import com.spg.commom.WebKeys;
 import com.spg.domin.Message;
 import com.spg.domin.User;
 import com.spg.domin.UserRoom;
@@ -14,11 +17,9 @@ import com.spg.web.webSocket.config.ChatServerConfigurator;
 import com.spg.web.webSocket.decoder.ChatDecoder;
 import com.spg.web.webSocket.encoder.ChatEncoder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
@@ -81,10 +82,6 @@ public class ChatServer {
 
     private ServerEndpointConfig endpointConfig;
 
-    //private HttpSession httpSession;
-
-    //private ConcurrentHashMap<String , CopyOnWriteArrayList<ChatMessage>> chatMessageMap;
-
     private ConcurrentHashMap<String ,CopyOnWriteArrayList<Session>> sessionUsers;
 
     @OnOpen
@@ -127,14 +124,10 @@ public class ChatServer {
         this.mySession.getUserProperties().put("user" ,user);
         this.endpointConfig = (ServerEndpointConfig) config;
         ChatServerConfigurator csc = (ChatServerConfigurator) endpointConfig.getConfigurator();
-        //this.chatMessageMap = csc.getMessages();
         this.sessionUsers = csc.getSessions();
-        //this.httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
         if (sessionUsers.get(roomId) == null) {
             CopyOnWriteArrayList<Session> sessions = new CopyOnWriteArrayList<>();
             sessionUsers.put(roomId ,sessions);
-            //CopyOnWriteArrayList<ChatMessage> chatMessages = new CopyOnWriteArrayList<>();
-            //chatMessageMap.put(roomId ,chatMessages);
         }
         this.sessionUsers.get(roomId).add(session);
         log.info("用户链接，用户id:"+user.getId());
@@ -144,14 +137,9 @@ public class ChatServer {
     public void handleChatMessage(@PathParam("chatRoomId") String roomId, ReceiveChatMessage receiveChatMessage) throws IOException, EncodeException {
         User user = (User) this.mySession.getUserProperties().get("user");
         ChatMessage chatMessage = new ChatMessage(user ,receiveChatMessage);
-//        if (Objects.equals(receiveChatMessage.getMessageType() ,1)) {
-//            this.addNewUser(roomId);
-//        }
-        //this.addMessage(roomId ,chatMessage);
         this.broadcastMessage(roomId ,new ReturnChatMessage(0 ,chatMessage));
         this.sendMessageToMyself(new ReturnChatMessage(1 ,chatMessage));
         executor.execute(() -> this.saveChatMessage(chatMessage ,roomId));
-        //this.saveChatMessage(chatMessage ,roomId);
     }
 
     @OnError
@@ -178,26 +166,6 @@ public class ChatServer {
             }
         }
     }
-
-//    /**
-//     * 聊天加入新的用户
-//     */
-//    private void addNewUser(String roomId){
-//        CopyOnWriteArrayList<Session> sessions = this.sessionUsers.get(roomId);
-//        if (!sessions.contains(mySession)) {
-//            sessions.add(mySession);
-//        }
-//    }
-
-//    /**
-//     * 加入聊天信息
-//     * @param roomId
-//     * @param chatMessage
-//     */
-//    private void addMessage(String roomId ,ChatMessage chatMessage){
-//        CopyOnWriteArrayList<ChatMessage> chatMessages = this.chatMessageMap.get(roomId);
-//        chatMessages.add(chatMessage);
-//    }
 
     /**
      * 给这个聊天室的人广播消息(除了自己)
